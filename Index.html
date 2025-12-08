@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOKLUMARKAR // SYSTEM TERMINAL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --void-bg: #0b0f14; 
+            --panel-bg: #151a21;
+            --ice-cyan: #2AF5FF;
+            --ice-cyan-dim: rgba(42, 245, 255, 0.1);
+            --text-main: #E6F1FF;
+            --text-sub: #8b9bb4;
+            --header-height: 70px;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --cube-s: 34px; 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body { 
+            background-color: var(--void-bg); 
+            color: var(--text-main); 
+            font-family: 'Noto Sans SC', sans-serif; 
+            overflow-x: hidden; 
+        }
+
+        /* ==================== 1. LOADING SCREEN ==================== */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--void-bg);
+            z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 0.8s var(--ease-out-expo);
+            background-image: linear-gradient(rgba(42, 245, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(42, 245, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0; pointer-events: none; transform: scale(1.1); filter: blur(10px);
+        }
+
+        .loader-content {
+            display: flex; flex-direction: column; align-items: center; width: 320px;
+        }
+
+        /* Rune Animation */
+        .rune-container { position: relative; width: 100px; height: 100px; margin-bottom: 40px; }
+        .rune-core {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
+        }
+        .diamond-shape {
+            width: 20px; height: 20px; background: var(--ice-cyan); transform: rotate(45deg);
+            box-shadow: 0 0 20px var(--ice-cyan);
+            animation: diamond-pulse 2s infinite ease-in-out;
+        }
+        .rune-ring {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 1px dashed rgba(42, 245, 255, 0.3); border-radius: 50%;
+        }
+        .rune-ring.outer { animation: spin 10s linear infinite; }
+        .rune-ring.middle { width: 70%; height: 70%; top: 15%; left: 15%; border-style: solid; border-color: transparent transparent var(--ice-cyan) var(--ice-cyan); opacity: 0.5; animation: spin 4s linear infinite reverse; }
+
+        .scan-line-vertical {
+            position: absolute; left: 50%; top: -50%; width: 1px; height: 200%; background: linear-gradient(to bottom, transparent, var(--ice-cyan), transparent); opacity: 0.5;
+            animation: scan-v 2s ease-in-out infinite;
+        }
+        .scan-line-horizontal {
+            position: absolute; top: 50%; left: -50%; width: 200%; height: 1px; background: linear-gradient(to right, transparent, var(--ice-cyan), transparent); opacity: 0.5;
+            animation: scan-h 2s ease-in-out infinite;
+        }
+
+        @keyframes diamond-pulse { 0%,100%{transform:rotate(45deg) scale(1); opacity:1;} 50%{transform:rotate(45deg) scale(0.8); opacity:0.5;} }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes scan-v { 0%{transform:scaleY(0);opacity:0;} 50%{transform:scaleY(1);opacity:0.5;} 100%{transform:scaleY(0);opacity:0;} }
+        @keyframes scan-h { 0%{transform:scaleX(0);opacity:0;} 50%{transform:scaleX(1);opacity:0.5;} 100%{transform:scaleX(0);opacity:0;} }
+
+        /* Text & Bar */
+        .loading-text-group { width: 100%; text-align: center; }
+        .decode-text {
+            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 30px;
+        }
+        .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; }
+        .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear; }
+        .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
+
+        #enter-btn {
+            margin-top: 30px; background: transparent; border: none; cursor: pointer; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+            opacity: 0; transform: translateY(10px); transition: 0.5s;
+        }
+        #enter-btn.show { opacity: 1; transform: translateY(0); }
+        #enter-btn:hover { letter-spacing: 2px; text-shadow: 0 0 10px var(--ice-cyan); }
+
+
+        /* ==================== 2. GLOBAL VISUALS ==================== */
+
+        .bg-huge-text {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'Rajdhani', sans-serif; font-weight: 900; font-size: 25vw;
+            color: rgba(42, 245, 255, 0.02); z-index: -4; pointer-events: none; white-space: nowrap;
+        }
+
+        #ice-particles { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: -3; pointer-events: none; 
+        }
+
+        /* Frost Layer */
+        #frost-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2; pointer-events: none;
+            background-color: rgba(42, 245, 255, 0.05); 
+            backdrop-filter: blur(10px) brightness(1.1);
+            -webkit-backdrop-filter: blur(10px) brightness(1.1);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)' opacity='0.05'/%3E%3C/svg%3E");
+            
+            --mask-size: 250px;
+            mask-image: radial-gradient(
+                circle var(--mask-size) at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                transparent 0%, 
+                black 100%
+            );
+            -webkit-mask-image: radial-gradient(
+                circle var(--mask-size) at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                transparent 0%, 
+                black 100%
+            );
+            transition: background-color 0.3s;
+        }
+
+        .global-scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.3) 3px);
+            pointer-events: none; z-index: 900; opacity: 0.3;
+        }
+        .global-vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, #000 120%); pointer-events: none; z-index: 899;
+        }
+
+        /* Click Ripple */
+        .click-ripple {
+            position: fixed; transform: translate(-50%, -50%);
+            border-radius: 50%; background: transparent;
+            border: 2px solid var(--ice-cyan); box-shadow: 0 0 20px var(--ice-cyan);
+            z-index: 9999; pointer-events: none;
+            animation: ripple-boom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes ripple-boom {
+            0% { width: 0px; height: 0px; opacity: 1; border-width: 5px; }
+            100% { width: 400px; height: 400px; opacity: 0; border-width: 0px; }
+        }
+
+
+        /* Header */
+        .top-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
+            background: rgba(11, 15, 20, 0.85); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(42, 245, 255, 0.1);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 40px; z-index: 1000;
+        }
+        .brand-area { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { width: 30px; height: 30px; border: 2px solid var(--ice-cyan); transform: rotate(45deg); display: flex; justify-content: center; align-items: center; }
+        .inner-diamond { width: 10px; height: 10px; background: var(--ice-cyan); }
+        .brand-text h1 { font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; color: var(--ice-cyan); line-height: 1; }
+        .brand-text span { font-size: 0.7rem; color: var(--text-sub); letter-spacing: 2px; }
+
+        .top-nav-links { display: flex; gap: 30px; }
+        .nav-btn { text-decoration: none; color: var(--text-sub); font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1rem; position: relative; transition: 0.3s; }
+        .nav-btn:hover, .nav-btn.active { color: var(--ice-cyan); }
+        .nav-btn.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 2px; background: var(--ice-cyan); }
+        .system-time { font-family: 'Rajdhani', sans-serif; color: var(--text-sub); }
+
+
+        /* ==================== 3. MAIN LAYOUT & SECTIONS ==================== */
+        .main-container {
+            position: relative;
+            padding-top: calc(var(--header-height) + 40px);
+            max-width: 1200px; margin: 0 auto; padding-bottom: 60px; z-index: 1;
+        }
+
+        .screen-section {
+            min-height: 80vh; display: flex; flex-direction: column; justify-content: center;
+            opacity: 0; transform: translateY(30px); transition: 0.8s var(--ease-out-expo); margin-bottom: 60px;
+            scroll-margin-top: 15vh;
+        }
+        .screen-section.active { opacity: 1; transform: translateY(0); }
+
+        .section-head { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
+        .deco-square { width: 8px; height: 8px; background: var(--ice-cyan); transform: rotate(45deg); }
+        .section-head h2 { font-family: 'Rajdhani', sans-serif; font-size: 2rem; color: var(--text-main); letter-spacing: 2px; }
+        .deco-line { flex-grow: 1; height: 1px; background: linear-gradient(90deg, rgba(42,245,255,0.5), transparent); }
+        .idx { font-family: 'Rajdhani', sans-serif; font-size: 3rem; color: rgba(255,255,255,0.03); font-weight: 900; }
+
+        /* === Hero & Layout Adjustment === */
+        .hero-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 40px;
+            transform: translateY(-8vh);
+        }
+        .hero-left {
+            flex: 0 0 50%; 
+            z-index: 10;
+        }
+        .hero-right {
+            flex: 0 0 50%;
+            height: 650px; 
+            position: relative;
+            perspective: 1200px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .decoration-tag { 
+            background: var(--ice-cyan-dim); color: var(--ice-cyan); display: inline-block; padding: 4px 10px; 
+            font-family: 'Rajdhani', sans-serif; font-weight: bold; margin-bottom: 20px; border-left: 2px solid var(--ice-cyan);
+        }
+        .glitch-header {
+            font-family: 'Rajdhani', sans-serif; font-size: 4.5rem; line-height: 0.9; color: var(--text-main); margin-bottom: 15px;
+            position: relative; display: inline-block;
+        }
+        .glitch-header::before, .glitch-header::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8;
+        }
+        .glitch-header::before {
+            color: #f0f; z-index: -1; animation: glitch-anim-1 3s infinite linear alternate-reverse; clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+        }
+        .glitch-header::after {
+            color: #0ff; z-index: -2; animation: glitch-anim-2 2.5s infinite linear alternate-reverse; clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+        }
+        @keyframes glitch-anim-1 { 0% { transform: translate(0); } 20% { transform: translate(-2px, 2px); } 40% { transform: translate(-2px, -2px); } 100% { transform: translate(0); } }
+        @keyframes glitch-anim-2 { 0% { transform: translate(0); } 20% { transform: translate(2px, -2px); } 40% { transform: translate(-2px, 2px); } 100% { transform: translate(0); } }
+
+        .sub-header { font-family: 'Noto Serif SC', serif; font-size: 1.8rem; color: var(--text-main); margin-bottom: 20px; font-weight: normal; }
+        .hero-desc { color: var(--text-sub); line-height: 1.6; margin-bottom: 30px; max-width: 500px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 20px; }
+
+        .stats-row { display: flex; gap: 20px; width: 300px; }
+        .stat-block { flex: 1; }
+        .stat-block .label { font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--ice-cyan); margin-bottom: 5px; display: block; }
+        .bar-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); }
+        .bar-val { height: 100%; background: var(--ice-cyan); }
+
+        /* === VOXEL ZLY 3D STYLE === */
+        .voxel-container {
+            position: relative; width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .voxel-container.clickable { cursor: pointer; }
+
+        .voxel-stage {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg) rotateY(15deg); 
+            width: 0; height: 0;
+            transition: transform 0.2s ease-out; 
+        }
+
+        .orbit-ring {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) translateZ(-50px);
+            border-radius: 50%;
+            border: 1px dashed rgba(42, 245, 255, 0.2); pointer-events: none;
+        }
+        .orbit-ring.ring-outer { width: 500px; height: 500px; animation: spin-cw 20s linear infinite; }
+        .orbit-ring.ring-inner { width: 380px; height: 380px; border-style: solid; border-color: rgba(42, 245, 255, 0.1) transparent; animation: spin-ccw 15s linear infinite; }
+
+        .click-hint {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%) translateZ(80px);
+            font-family: 'Rajdhani', monospace; font-size: 0.7rem; color: var(--text-sub); opacity: 0.6;
+            pointer-events: none; letter-spacing: 2px; text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            animation: blink-hint 2s infinite;
+        }
+        @keyframes blink-hint { 0%,100% {opacity:0.3;} 50% {opacity:0.8;} }
+
+        .voxel-char { position: absolute; transform-style: preserve-3d; top: 0; left: 0; }
+        .float-slow { animation: char-float-deep 7s ease-in-out infinite alternate; }
+        .float-mid  { animation: char-float-deep 6s ease-in-out infinite alternate-reverse; }
+        .float-fast { animation: char-float-deep 5s ease-in-out infinite alternate; }
+
+        @keyframes char-float-deep {
+            0% { transform: translate3d(var(--px), var(--py), var(--pz)) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s)); }
+            100% { transform: translate3d(var(--px), calc(var(--py) - 30px), var(--pz)) rotateX(var(--rx)) rotateY(var(--ry)) scale(var(--s)); } 
+        }
+
+        .cube {
+            position: absolute; width: var(--cube-s); height: var(--cube-s);
+            transform-style: preserve-3d;
+            opacity: 0; 
+            animation: cube-spawn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .cube .face {
+            position: absolute; width: 100%; height: 100%;
+            border: 1px solid rgba(42, 245, 255, 0.5);
+            background: rgba(42, 245, 255, 0.15); 
+            box-shadow: 0 0 15px rgba(42, 245, 255, 0.1) inset;
+            backface-visibility: visible;
+        }
+
+        .cube .face.front   { transform: rotateY(0deg) translateZ(calc(var(--cube-s)/2)); }
+        .cube .face.back    { transform: rotateY(180deg) translateZ(calc(var(--cube-s)/2)); }
+        .cube .face.right   { transform: rotateY(90deg) translateZ(calc(var(--cube-s)/2)); }
+        .cube .face.left    { transform: rotateY(-90deg) translateZ(calc(var(--cube-s)/2)); }
+        .cube .face.top     { transform: rotateX(90deg) translateZ(calc(var(--cube-s)/2)); background: rgba(255, 255, 255, 0.4); }
+        .cube .face.bottom  { transform: rotateX(-90deg) translateZ(calc(var(--cube-s)/2)); }
+
+        .cube.type-core .face { 
+            background: rgba(42, 245, 255, 0.7); 
+            box-shadow: 0 0 40px var(--ice-cyan); 
+            border: 1px solid #fff; 
+        }
+        .cube.type-dark .face { 
+            background: rgba(0, 0, 0, 0.9); 
+            border-color: rgba(42, 245, 255, 0.3); 
+        }
+
+        .satellite {
+            position: absolute; width: 6px; height: 6px;
+            background: #fff; box-shadow: 0 0 15px var(--ice-cyan);
+            transform-style: preserve-3d;
+            animation: orbit-cube 3s linear infinite;
+        }
+        @keyframes orbit-cube {
+            0% { transform: rotateY(0deg) translateZ(35px) rotateY(0deg); }
+            100% { transform: rotateY(360deg) translateZ(35px) rotateY(-360deg); }
+        }
+
+        @keyframes cube-spawn {
+            0% { opacity: 0; transform: translate3d(var(--tx), -400px, var(--tz)) scale(0) rotate(180deg); }
+            100% { opacity: 1; transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(1) rotate(0deg); }
+        }
+        @keyframes cube-glow {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.6); box-shadow: 0 0 40px var(--ice-cyan); }
+        }
+        .cube-pulse { animation: cube-glow 2s infinite alternate; }
+        @keyframes spin-cw { from { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); } to { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); } }
+        @keyframes spin-ccw { from { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); } to { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); } }
+
+
+        /* ==================== 4. 3D CAROUSEL ARCHIVES ==================== */
+        
+        .carousel-scene {
+            width: 100%;
+            height: 480px; /* Reduced height to save space */
+            position: relative;
+            perspective: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: grab;
+            padding-bottom: 20px; 
+        }
+        .carousel-scene:active { cursor: grabbing; }
+
+        .carousel-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .carousel-item {
+            position: absolute;
+            width: 260px; /* Reduced width from 320px */
+            transform-style: preserve-3d;
+            transition: box-shadow 0.3s, border-color 0.3s; 
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .tech-card {
+            background: var(--panel-bg); 
+            border: 1px solid rgba(255,255,255,0.05); 
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+            transition: border-color 0.3s, box-shadow 0.3s; 
+        }
+        
+        .carousel-item.active .tech-card {
+            border-color: var(--ice-cyan);
+            box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
+        }
+
+        /* Reduced visual height */
+        .card-visual { height: 130px; position: relative; overflow: hidden; border-bottom: 2px solid var(--ice-cyan); pointer-events: none; }
+        .card-visual img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.4s; }
+        .carousel-item.active .card-visual img { filter: grayscale(0); }
+        
+        .card-body { padding: 15px; pointer-events: none; }
+        .card-meta { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tag { font-size: 0.7rem; font-family: 'Rajdhani', sans-serif; background: rgba(255,255,255,0.1); padding: 2px 6px; color: var(--text-sub); }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
+        .access-btn { background: transparent; border: none; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; cursor: pointer; pointer-events: none; }
+        
+        /* Control Bar (Slider) */
+        .carousel-controls {
+            position: absolute;
+            bottom: 40px; 
+            width: 300px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        .slider-track {
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .slider-thumb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 10px;
+            background: var(--ice-cyan);
+            transform: translate(-50%, -50%);
+            border: 1px solid #fff;
+            box-shadow: 0 0 10px var(--ice-cyan);
+            cursor: pointer;
+        }
+        .slider-thumb:hover { height: 14px; }
+
+        /* Text Hint */
+        .drag-hint {
+            position: absolute;
+            bottom: 15px; 
+            width: 100%;
+            text-align: center;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            opacity: 0.7;
+            letter-spacing: 2px;
+            pointer-events: none;
+        }
+
+
+        /* === MODAL & OTHER STYLES === */
+        #sys-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.4s;
+        }
+        #sys-modal.active { opacity: 1; pointer-events: all; }
+
+        .modal-window {
+            width: 80%; max-width: 800px; height: auto; max-height: 90vh;
+            background: rgba(15, 20, 26, 0.95);
+            border: 1px solid var(--ice-cyan);
+            box-shadow: 0 0 50px rgba(42, 245, 255, 0.15);
+            display: flex; flex-direction: column;
+            transform: scale(0.95) translateY(20px); transition: 0.4s var(--ease-out-expo);
+            overflow: hidden;
+            position: relative;
+        }
+        #sys-modal.active .modal-window { transform: scale(1) translateY(0); }
+
+        .modal-header {
+            height: 60px; background: rgba(42, 245, 255, 0.05); border-bottom: 1px solid rgba(42, 245, 255, 0.2);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+        }
+        .modal-title { font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--ice-cyan); letter-spacing: 2px; }
+        .modal-close {
+            background: transparent; border: 1px solid var(--ice-cyan); color: var(--ice-cyan);
+            width: 30px; height: 30px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: 0.3s;
+        }
+        .modal-close:hover { background: var(--ice-cyan); color: #000; }
+
+        .modal-body { padding: 40px; overflow-y: auto; display: flex; gap: 40px; flex-wrap: wrap; }
+        .modal-img { flex: 1 1 300px; height: 300px; background: #000; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .modal-img img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-info { flex: 1 1 300px; display: flex; flex-direction: column; gap: 20px; }
+        .modal-desc { line-height: 1.8; color: var(--text-main); font-size: 0.95rem; }
+        .modal-decor { font-family: 'Rajdhani', sans-serif; color: var(--text-sub); font-size: 0.8rem; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+
+        .modal-action { margin-top: auto; }
+        .jump-btn {
+            background: var(--ice-cyan); color: #0b0f14; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+            padding: 12px 30px; border: none; cursor: pointer; font-size: 1rem; letter-spacing: 2px;
+            display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; text-decoration: none;
+        }
+        .jump-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(42, 245, 255, 0.5); }
+
+
+        /* Intel List */
+        .intel-list { display: flex; flex-direction: column; gap: 15px; }
+        .intel-row { 
+            background: rgba(255,255,255,0.02); border-left: 3px solid rgba(255,255,255,0.1); 
+            padding: 20px; display: flex; align-items: center; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;
+        }
+        .intel-row:hover { background: rgba(42, 245, 255, 0.15); border-left: 4px solid var(--ice-cyan); box-shadow: 0 0 30px rgba(42, 245, 255, 0.1); transform: translateX(10px); }
+        .intel-icon { 
+            width: 40px; height: 40px; background: #222; color: #fff; 
+            display: flex; justify-content: center; align-items: center; 
+            font-family: 'Rajdhani', sans-serif; margin-right: 20px; font-weight: bold; transition: 0.3s;
+        }
+        .intel-row:hover .intel-icon { background: var(--ice-cyan); color: var(--void-bg); box-shadow: 0 0 10px var(--ice-cyan); }
+        .intel-info { flex-grow: 1; }
+        .intel-info h4 { font-size: 1rem; margin-bottom: 4px; transition: color 0.3s; }
+        .intel-row:hover .intel-info h4 { color: var(--ice-cyan); }
+        .intel-sub { font-size: 0.8rem; color: var(--text-sub); font-family: 'Rajdhani', sans-serif; }
+        .download-btn { background: transparent; border: 1px solid var(--ice-cyan); color: var(--ice-cyan); padding: 5px 15px; font-family: 'Rajdhani', sans-serif; cursor: pointer; transition: 0.3s; }
+        .intel-row:hover .download-btn { background: var(--ice-cyan); color: #000; box-shadow: 0 0 10px var(--ice-cyan); }
+
+        /* Connect */
+        .connect-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; perspective: 1000px; }
+        .connect-card { 
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 30px; transform-style: preserve-3d; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .connect-card:hover { border-color: var(--ice-cyan); box-shadow: 0 0 20px rgba(42, 245, 255, 0.1); }
+        .channel-list { display: flex; flex-direction: column; gap: 10px; }
+        .channel-item { 
+            display: flex; align-items: center; padding: 12px; background: rgba(255,255,255,0.03); 
+            text-decoration: none; color: var(--text-main); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); border-left: 2px solid transparent; 
+        }
+        .channel-item:hover { 
+            background: linear-gradient(90deg, rgba(42, 245, 255, 0.2), transparent); 
+            border-left-color: var(--ice-cyan); border-left-width: 4px; padding-left: 30px; text-shadow: 0 0 8px var(--ice-cyan);
+        }
+        .channel-item .icon { width: 20px; margin-right: 10px; text-align: center; color: var(--text-sub); transition: 0.3s; }
+        .channel-item:hover .icon { color: var(--ice-cyan); transform: scale(1.2); }
+        .channel-item .arrow { opacity: 0; transform: translateX(-10px); transition: 0.3s; color: var(--ice-cyan); margin-left: auto; }
+        .channel-item:hover .arrow { opacity: 1; transform: translateX(0); }
+
+        .msg-content { color: var(--text-sub); line-height: 1.6; margin-bottom: 20px; }
+        .signal-viz { display: flex; gap: 4px; height: 20px; align-items: flex-end; }
+        .signal-viz .bar { width: 6px; background: var(--text-sub); animation: bounce 1s infinite; }
+        .connect-card:hover .signal-viz .bar { background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); }
+        @keyframes bounce { 0%,100%{height: 40%;} 50%{height: 100%;} }
+
+        /* Footer */
+        .bottom-status-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 30px;
+            background: var(--panel-bg); border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; gap: 30px; align-items: center; padding: 0 40px;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .hero-layout { flex-direction: column; text-align: center; transform: translateY(0); }
+            .hero-left, .hero-right { width: 100%; flex: 0 0 100%; }
+            .hero-right { margin-top: 20px; height: 350px; }
+            .glitch-header { font-size: 3rem; }
+            .connect-grid { grid-template-columns: 1fr; }
+            .top-nav-links { display: none; }
+            .stats-row { margin: 0 auto; }
+            :root { --cube-s: 20px; } 
+            .modal-body { flex-direction: column; }
+            .modal-img { height: 200px; }
+            /* Mobile Carousel Adjustment */
+            .carousel-item { width: 220px; }
+            .carousel-scene { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="rune-container">
+                <div class="rune-ring outer"></div>
+                <div class="rune-ring middle"></div>
+                <div class="rune-core">
+                    <div class="diamond-shape"></div>
+                </div>
+                <div class="scan-line-vertical"></div>
+                <div class="scan-line-horizontal"></div>
+            </div>
+            
+            <div class="loading-text-group">
+                <div class="decode-text" data-final="NEURAL CONNECTING">INITIATING...</div>
+                <div class="loading-bar-fancy">
+                    <div class="bar-fill"></div>
+                </div>
+                <div class="status-row">
+                    <span class="sys-code">ERR_CHECK: PASS</span>
+                    <span id="load-percent">00%</span>
+                </div>
+            </div>
+
+            <button id="enter-btn" class="hidden">
+                <span class="deco-bracket">[</span> 
+                <span class="btn-text">ACCESS GRANTED</span> 
+                <span class="deco-bracket">]</span>
+            </button>
+        </div>
+        <div class="vignette-overlay"></div>
+    </div>
+
+    <div class="global-scanlines"></div>
+    <div class="global-vignette"></div>
+    <div class="bg-huge-text">IS-04</div>
+    <canvas id="ice-particles"></canvas>
+    <div id="frost-layer"></div>
+
+    <div id="sys-modal">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span class="modal-title">>> SYSTEM DECRYPT</span>
+                <button class="modal-close">X</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-img">
+                    <img id="modal-img-target" src="" alt="Detail View">
+                    <div class="overlay-scan"></div>
+                </div>
+                <div class="modal-info">
+                    <div class="modal-decor">DATA_PACKET_ID: <span id="modal-id">...</span></div>
+                    <h3 id="modal-full-title" style="font-family:'Rajdhani'; color:#fff; font-size:1.8rem; margin-bottom:10px;">TITLE</h3>
+                    <p id="modal-full-desc" class="modal-desc">Description loading...</p>
+                    
+                    <div class="modal-action">
+                        <a id="modal-link" href="#" target="_blank" class="jump-btn">
+                            INITIATE LINK <span class="arrow">>></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="top-bar">
+        <div class="brand-area">
+            <div class="logo-icon">
+                <div class="inner-diamond"></div>
+            </div>
+            <div class="brand-text">
+                <h1>IS-04</h1>
+                <span>EXPEDITION</span>
+            </div>
+        </div>
+        <nav class="top-nav-links">
+            <a href="#overview" class="nav-btn active">OVERVIEW</a>
+            <a href="#archives" class="nav-btn">ARCHIVES</a>
+            <a href="#analysis" class="nav-btn">ANALYSIS</a>
+            <a href="#connect" class="nav-btn">CONNECT</a>
+        </nav>
+        <div class="system-time" id="sys-time">00:00:00</div>
+    </header>
+
+    <main class="main-container">
+
+        <section id="overview" class="screen-section">
+            <div class="hero-layout">
+                <div class="hero-left">
+                    <div class="decoration-tag">/// VOXEL ARCHITECT</div>
+                    <h1 class="glitch-header" data-text="SYSTEM BUILDER">SYSTEM BUILDER</h1>
+                    <h2 class="sub-header">ZLY // 逻辑编织者</h2>
+                    <p class="hero-desc">
+                        "世界由方块与逻辑堆砌而成。"<br>
+                        点击右侧核心，重构数据矩阵。<br>
+                        在离散的像素中寻找连续的真理。
+                    </p>
+                    <div class="stats-row">
+                        <div class="stat-block">
+                            <span class="label">CREATIVITY</span>
+                            <div class="bar-track"><div class="bar-val" style="width: 95%"></div></div>
+                        </div>
+                        <div class="stat-block">
+                            <span class="label">LOGIC</span>
+                            <div class="bar-track"><div class="bar-val" style="width: 88%"></div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hero-right">
+                    <div class="voxel-container js-tilt-3d clickable">
+                        <div class="voxel-stage" id="voxel-stage"></div>
+                        <div class="orbit-ring ring-outer"></div>
+                        <div class="orbit-ring ring-inner"></div>
+                        
+                        <div class="click-hint">>> CLICK CORE TO RECONSTRUCT <<</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="archives" class="screen-section">
+            <div class="section-head">
+                <div class="deco-square"></div>
+                <h2>PROJECT ARCHIVES</h2>
+                <div class="deco-line"></div>
+                <span class="idx">02</span>
+            </div>
+
+            <div class="carousel-scene" id="carousel-scene">
+                <div class="carousel-track" id="carousel-track">
+                    
+                    <div class="carousel-item" 
+                        data-title="Project: Vanguard" 
+                        data-desc="这是一个硬核塔防策略原型，重点验证复杂的寻路算法与技能释放系统。我在Unity中构建了基于Tile的地图编辑器，并实现了A*寻路的高效变体。点击链接前往Bilibili观看实机演示。" 
+                        data-img="https://via.placeholder.com/600x400/111/2AF5FF?text=VANGUARD" 
+                        data-link="https://www.bilibili.com/"
+                        data-id="#0921">
+                        <article class="tech-card">
+                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/111/2AF5FF?text=VANGUARD"></div>
+                            <div class="card-body">
+                                <div class="card-meta"><span class="tag">UNITY</span><span class="tag">STRATEGY</span></div>
+                                <h3>Project: Vanguard</h3>
+                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0921</span></div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="carousel-item" 
+                        data-title="Economy Sim" 
+                        data-desc="基于Excel VBA与Python构建的MMORPG经济系统模拟器。可以模拟长达10年的服务器资源通胀情况，用于平衡金币产出与消耗循环。包含详细的可视化图表。" 
+                        data-img="https://via.placeholder.com/600x400/222/2AF5FF?text=ECONOMY" 
+                        data-link="https://github.com/"
+                        data-id="#0815">
+                        <article class="tech-card">
+                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/222/2AF5FF?text=ECONOMY"></div>
+                            <div class="card-body">
+                                <div class="card-meta"><span class="tag">EXCEL</span><span class="tag">SIM</span></div>
+                                <h3>Economy Sim</h3>
+                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0815</span></div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="carousel-item" 
+                        data-title="Gravity String Dancer" 
+                        data-desc="3D高机动性动作游戏。核心机制是基于物理摆动的'钩索'系统。玩家需要利用离心力和重力在巨大的赛博都市废墟中穿梭战斗。曾参与miHoYo游戏设计竞赛。" 
+                        data-img="https://via.placeholder.com/600x400/333/2AF5FF?text=GRAVITY+DANCER" 
+                        data-link="#"
+                        data-id="#1110">
+                        <article class="tech-card">
+                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/333/2AF5FF?text=GRAVITY+DANCER"></div>
+                            <div class="card-body">
+                                <div class="card-meta"><span class="tag">UNITY</span><span class="tag">ACTION</span></div>
+                                <h3>Gravity Dancer</h3>
+                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#1110</span></div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="carousel-item" 
+                        data-title="Neural Visualizer" 
+                        data-desc="一个基于WebGL的数据可视化实验，旨在将神经网络的黑盒过程具象化。用户可以实时输入参数，观察节点激活的粒子特效。灵感来源于《尼尔：机械纪元》的UI设计。" 
+                        data-img="https://via.placeholder.com/600x400/000/2AF5FF?text=NEURAL" 
+                        data-link="https://threejs.org/"
+                        data-id="#0773">
+                        <article class="tech-card">
+                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/000/2AF5FF?text=NEURAL"></div>
+                            <div class="card-body">
+                                <div class="card-meta"><span class="tag">WEBGL</span><span class="tag">ART</span></div>
+                                <h3>Neural Visualizer</h3>
+                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0773</span></div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="carousel-item" 
+                        data-title="Cyber Pet: E01" 
+                        data-desc="电子宠物养成APP。结合了手机计步器与天气API，你的现实生活状态直接影响电子宠物的进化路线。包含30种不同的进化形态与独特的像素动画。" 
+                        data-img="https://via.placeholder.com/600x400/1a1a1a/2AF5FF?text=CYBER+PET" 
+                        data-link="https://play.google.com/"
+                        data-id="#0666">
+                        <article class="tech-card">
+                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=CYBER+PET"></div>
+                            <div class="card-body">
+                                <div class="card-meta"><span class="tag">APP</span><span class="tag">LIVE2D</span></div>
+                                <h3>Cyber Pet: E01</h3>
+                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0666</span></div>
+                            </div>
+                        </article>
+                    </div>
+
+                </div>
+
+                <div class="carousel-controls">
+                    <div class="slider-track">
+                        <div class="slider-thumb" id="slider-thumb"></div>
+                    </div>
+                </div>
+                
+                <div class="drag-hint">
+                    << DRAG OR SLIDE TO ROTATE >>
+                </div>
+            </div>
+        </section>
+
+        <section id="analysis" class="screen-section">
+            <div class="section-head">
+                <div class="deco-square"></div>
+                <h2>INTEL DECODE</h2>
+                <div class="deco-line"></div>
+                <span class="idx">03</span>
+            </div>
+            <div class="intel-list">
+                <div class="intel-row" 
+                    data-title="集成战略：随机性控制" 
+                    data-desc="这份文档详细拆解了Roguelike游戏中的随机性算法。从伪随机分布(PRD)到动态难度调整(DDA)，深入探讨了如何让随机既公平又充满惊喜。包含大量数值模型推演。" 
+                    data-link="https://docs.google.com/" 
+                    data-id="DOC_52MB">
+                    <div class="intel-icon">DOC</div>
+                    <div class="intel-info">
+                        <h4>集成战略：随机性控制拆解</h4>
+                        <span class="intel-sub">Gameplay Analysis // 5.2MB</span>
+                    </div>
+                    <button class="download-btn">ACCESS DETAILS</button>
+                </div>
+
+                <div class="intel-row" 
+                    data-title="战斗公式推演验证" 
+                    data-desc="Excel表格文件。包含了减伤公式、暴击收益曲线以及属性克制系数的完整推演过程。用于验证游戏后期的数值膨胀控制模型。" 
+                    data-link="https://office.com/" 
+                    data-id="XLS_14MB">
+                    <div class="intel-icon">XLS</div>
+                    <div class="intel-info">
+                        <h4>战斗公式推演验证表</h4>
+                        <span class="intel-sub">System Math // 1.4MB</span>
+                    </div>
+                    <button class="download-btn">ACCESS DETAILS</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="connect" class="screen-section">
+            <div class="section-head">
+                <div class="deco-square"></div>
+                <h2>TERMINAL CONNECT</h2>
+                <div class="deco-line"></div>
+                <span class="idx">04</span>
+            </div>
+            <div class="connect-grid">
+                <div class="connect-card contact-info js-tilt">
+                    <h3>// COMMUNICATION CHANNELS</h3>
+                    <div class="channel-list">
+                        <a href="#" class="channel-item">
+                            <span class="icon">✉</span>
+                            <span class="text">EMAIL: your@email.com</span>
+                            <span class="arrow">>></span>
+                        </a>
+                        <a href="#" class="channel-item">
+                            <span class="icon">▶</span>
+                            <span class="text">BILIBILI: UID 123456</span>
+                            <span class="arrow">>></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="connect-card status-log js-tilt">
+                    <h3>// SYSTEM MESSAGE</h3>
+                    <p class="msg-content">
+                        等待信号连接...<br>
+                        "May the guide lights lead you home."
+                    </p>
+                    <div class="signal-viz">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bottom-status-bar">
+        <div class="bar-item">SYS_STATUS: STABLE</div>
+        <div class="bar-item">VER: 4.8.2 KINETIC_VOXEL</div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- 1. Loading Logic ---
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingBar = document.querySelector('.bar-fill');
+        const loadPercent = document.getElementById('load-percent');
+        const enterBtn = document.getElementById('enter-btn');
+        const decodeText = document.querySelector('.decode-text');
+        const finalMsg = decodeText.getAttribute('data-final');
+
+        const textScramble = (element, finalString) => {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_#@';
+            let iterations = 0;
+            const interval = setInterval(() => {
+                element.innerText = finalString
+                    .split('')
+                    .map((letter, index) => {
+                        if(index < iterations) return finalString[index];
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    })
+                    .join('');
+                
+                if(iterations >= finalString.length) clearInterval(interval);
+                iterations += 1/2; 
+            }, 40);
+        };
+
+        let progress = 0;
+        const loadInterval = setInterval(() => {
+            progress += Math.random() * 3; 
+            if (progress > 100) progress = 100;
+            loadingBar.style.width = `${progress}%`;
+            loadPercent.innerText = `${Math.floor(progress)}%`;
+            if (progress >= 100) {
+                clearInterval(loadInterval);
+                textScramble(decodeText, finalMsg);
+                setTimeout(() => {
+                    enterBtn.classList.remove('hidden');
+                    enterBtn.classList.add('show');
+                }, 500);
+            }
+        }, 40);
+
+        enterBtn.addEventListener('click', () => {
+            loadingScreen.classList.add('fade-out');
+            buildVoxels(); 
+        });
+
+        // --- 2. Voxel Builder ---
+        const randomRange = (min, max) => Math.random() * (max - min) + min;
+
+        const buildVoxels = () => {
+            const stage = document.getElementById('voxel-stage');
+            if (!stage) return; 
+            stage.innerHTML = '';
+            const size = 34; 
+            const fontMap = {
+                Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
+                L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
+                Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]]
+            };
+            const layoutConfig = [
+                { char: 'Z', pos: { x: -80 + randomRange(-10,10), y: 60 + randomRange(-10,10), z: -120 }, rot: { x: randomRange(-5,5), y: -25 + randomRange(-5,5), z: 5 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: 'L', pos: { x: 100 + randomRange(-10,10), y: 30 + randomRange(-10,10), z: -20 }, rot: { x: 5, y: 30 + randomRange(-5,5), z: 0 }, scale: 1.2, floatClass: 'float-mid', colorMod: 'normal' },
+                { char: 'Y', pos: { x: 0, y: -60 + randomRange(-10,10), z: 120 }, rot: { x: 5, y: 0 + randomRange(-5,5), z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'bright' }
+            ];
+
+            const createSatellite = (parentCube) => {
+                const sat = document.createElement('div');
+                sat.className = 'satellite';
+                sat.style.animationDelay = `${Math.random() * 2}s`;
+                parentCube.appendChild(sat);
+            };
+
+            const createCube = (x, y, z, type, delay, colorMod) => {
+                const cube = document.createElement('div');
+                let extraClass = '';
+                if (colorMod === 'dark' && type !== 'type-core') extraClass = 'type-dark';
+                if (colorMod === 'bright') extraClass = 'cube-pulse'; 
+                if (Math.random() > 0.8 && type !== 'type-core') extraClass = 'cube-pulse';
+                
+                cube.className = `cube ${type} ${extraClass}`;
+                cube.style.setProperty('--tx', `${x * size}px`);
+                cube.style.setProperty('--ty', `${y * size}px`);
+                cube.style.setProperty('--tz', `${z * size}px`);
+                cube.style.animationDelay = `${delay}ms`;
+
+                ['front', 'back', 'left', 'right', 'top', 'bottom'].forEach(faceCls => {
+                    const face = document.createElement('div');
+                    face.className = `face ${faceCls}`;
+                    cube.appendChild(face);
+                });
+                if (Math.random() > 0.9) createSatellite(cube);
+                return cube;
+            };
+
+            layoutConfig.forEach(conf => {
+                const grid = fontMap[conf.char];
+                const charContainer = document.createElement('div');
+                charContainer.className = `voxel-char ${conf.floatClass}`;
+                charContainer.style.setProperty('--px', `${conf.pos.x}px`);
+                charContainer.style.setProperty('--py', `${conf.pos.y}px`);
+                charContainer.style.setProperty('--pz', `${conf.pos.z}px`);
+                charContainer.style.setProperty('--rx', `${conf.rot.x}deg`);
+                charContainer.style.setProperty('--ry', `${conf.rot.y}deg`);
+                charContainer.style.setProperty('--s', `${conf.scale}`);
+                charContainer.style.transform = `translate3d(${conf.pos.x}px, ${conf.pos.y}px, ${conf.pos.z}px) rotateX(${conf.rot.x}deg) rotateY(${conf.rot.y}deg) scale(${conf.scale})`;
+
+                grid.forEach((row, rowIndex) => {
+                    row.forEach((val, colIndex) => {
+                        if (val === 0) return;
+                        const x = colIndex - 2, y = rowIndex - 2, depth = val === 2 ? 3 : 1; 
+                        for (let d = 0; d < depth; d++) {
+                            const z = d - (depth/2);
+                            let type = val === 2 ? 'type-core' : '';
+                            const delay = (rowIndex * 30) + (colIndex * 30) + Math.random() * 500;
+                            charContainer.appendChild(createCube(x, y, z, type, delay, conf.colorMod));
+                        }
+                    });
+                });
+                stage.appendChild(charContainer);
+            });
+        };
+
+        const voxelContainer = document.querySelector('.voxel-container');
+        if (voxelContainer) voxelContainer.addEventListener('click', buildVoxels);
+
+        // --- 3. Enhanced 3D Tilt (Text Cards and Connect Only) ---
+        const tiltCards = document.querySelectorAll('.connect-card, .intel-row'); // Removed tech-card from tilt logic as carousel handles it
+        const holoModel = document.querySelector('.js-tilt-3d');
+
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX, y = e.clientY;
+            const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+
+            tiltCards.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const dx = (x - (rect.left + rect.width/2)) / 30;
+                const dy = (y - (rect.top + rect.height/2)) / 30;
+                el.style.transform = `rotateX(${-dy}deg) rotateY(${dx}deg)`;
+            });
+
+            if(holoModel) {
+                const stage = holoModel.querySelector('.voxel-stage');
+                if(stage) {
+                    const dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    stage.style.transform = `translate3d(${dx * -20}px, ${dy * -20}px, 0) rotateX(${-10 + (-dy * 25)}deg) rotateY(${15 + (dx * 35)}deg)`;
+                }
+            }
+        });
+
+        // ==================== 4. CAROUSEL LOGIC ====================
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        const carouselScene = document.getElementById('carousel-scene');
+        const sliderThumb = document.getElementById('slider-thumb');
+        
+        let currentRotation = 0;
+        let targetRotation = 0;
+        let isDragging = false;
+        let startX = 0;
+        let lastX = 0;
+        
+        // Modified: Reduced radius to match smaller cards
+        const radius = window.innerWidth < 768 ? 180 : 320; 
+        const totalItems = carouselItems.length;
+        const anglePerItem = 360 / totalItems;
+
+        const updateCarousel = () => {
+            currentRotation += (targetRotation - currentRotation) * 0.1;
+
+            carouselItems.forEach((item, index) => {
+                const itemAngle = (index * anglePerItem) + currentRotation;
+                const radian = itemAngle * (Math.PI / 180);
+
+                const x = Math.sin(radian) * radius;
+                const z = Math.cos(radian) * radius;
+                
+                const depthRatio = (z + radius) / (2 * radius); 
+                const scale = 0.6 + (depthRatio * 0.4); 
+                const opacity = 0.3 + (depthRatio * 0.7); 
+
+                // Modified: Lifted up by -30px to clear slider
+                item.style.transform = `translate3d(${x}px, -30px, ${z}px) scale(${scale})`;
+                item.style.opacity = opacity;
+                item.style.zIndex = Math.floor(z); 
+
+                if (z > radius - 100) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            const normalizedRot = (currentRotation % 360 + 360) % 360; 
+            const sliderPct = 100 - (normalizedRot / 360 * 100);
+            sliderThumb.style.left = `${sliderPct}%`;
+
+            requestAnimationFrame(updateCarousel);
+        };
+
+        const onDragStart = (x) => {
+            isDragging = true;
+            startX = x;
+            lastX = x;
+            carouselScene.style.cursor = 'grabbing';
+        };
+
+        const onDragMove = (x) => {
+            if (!isDragging) return;
+            const delta = x - lastX;
+            targetRotation += delta * 0.5; 
+            lastX = x;
+        };
+
+        const onDragEnd = () => {
+            isDragging = false;
+            carouselScene.style.cursor = 'grab';
+        };
+
+        carouselScene.addEventListener('mousedown', e => onDragStart(e.clientX));
+        window.addEventListener('mousemove', e => onDragMove(e.clientX));
+        window.addEventListener('mouseup', onDragEnd);
+
+        carouselScene.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX));
+        window.addEventListener('touchmove', e => onDragMove(e.touches[0].clientX));
+        window.addEventListener('touchend', onDragEnd);
+
+        const sliderTrack = document.querySelector('.slider-track');
+        let sliderDragging = false;
+
+        sliderTrack.addEventListener('mousedown', (e) => {
+            sliderDragging = true;
+            updateFromSlider(e);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if(sliderDragging) updateFromSlider(e);
+        });
+        window.addEventListener('mouseup', () => sliderDragging = false);
+
+        const updateFromSlider = (e) => {
+            const rect = sliderTrack.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            const delta = (e.movementX || 0) * -1;
+            targetRotation += delta;
+        }
+
+        updateCarousel();
+
+
+        // --- 5. Modal System ---
+        const modal = document.getElementById('sys-modal');
+        const modalCloseBtn = document.querySelector('.modal-close');
+        const mTitle = document.getElementById('modal-full-title');
+        const mDesc = document.getElementById('modal-full-desc');
+        const mId = document.getElementById('modal-id');
+        const mImg = document.getElementById('modal-img-target');
+        const mLink = document.getElementById('modal-link');
+
+        const openModal = (dataset) => {
+            mTitle.innerText = dataset.title || 'UNKNOWN DATA';
+            mDesc.innerText = dataset.desc || 'No description available.';
+            mId.innerText = dataset.id || 'N/A';
+            mLink.href = dataset.link || '#';
+            if (dataset.img) {
+                mImg.src = dataset.img;
+                mImg.parentElement.style.display = 'block'; 
+            } else {
+                mImg.parentElement.style.display = 'none'; 
+            }
+            modal.classList.add('active');
+        };
+
+        let clickStartX = 0;
+        document.querySelectorAll('.carousel-item').forEach(item => {
+            item.addEventListener('mousedown', e => clickStartX = e.clientX);
+            item.addEventListener('click', e => {
+                if (Math.abs(e.clientX - clickStartX) < 5) {
+                    openModal(item.dataset);
+                }
+            });
+            item.addEventListener('touchstart', e => clickStartX = e.touches[0].clientX);
+            item.addEventListener('touchend', e => {
+                const endX = e.changedTouches[0].clientX;
+                if (Math.abs(endX - clickStartX) < 5) {
+                    openModal(item.dataset);
+                }
+            });
+        });
+
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const row = btn.closest('.intel-row');
+                openModal(row.dataset);
+            });
+        });
+
+        modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
+        modal.addEventListener('click', (e) => {
+            if(e.target === modal) modal.classList.remove('active');
+        });
+
+
+        // --- 6. Particles & Canvas ---
+        const canvas = document.getElementById('ice-particles');
+        const ctx = canvas.getContext('2d');
+        const frostLayer = document.getElementById('frost-layer');
+        let width, height, particles = [];
+        const mouse = { x: -1000, y: -1000 }; 
+        let blast = { x: -1000, y: -1000, active: false };
+
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX; mouse.y = e.clientY;
+            frostLayer.style.setProperty('--mouse-x', `${mouse.x}px`);
+            frostLayer.style.setProperty('--mouse-y', `${mouse.y}px`);
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            const ripple = document.createElement('div');
+            ripple.classList.add('click-ripple');
+            ripple.style.left = `${e.clientX}px`; ripple.style.top = `${e.clientY}px`;
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+            blast.x = e.clientX; blast.y = e.clientY; blast.active = true;
+            setTimeout(() => blast.active = false, 200);
+        });
+
+        const resize = () => { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; };
+        
+        class Particle {
+            constructor() { this.reset(true); }
+            reset(isInit = false) {
+                this.x = Math.random() * width; this.y = isInit ? Math.random() * height : -10; 
+                this.depth = Math.random() * 0.9 + 0.1; this.size = (Math.random() * 2 + 0.5) * this.depth; 
+                this.speedY = (Math.random() * 2 + 1) * this.depth; this.speedX = (Math.random() * 1.5 - 0.5) * this.depth; 
+                this.baseOpacity = this.depth * 0.4 + 0.05; this.opacity = this.baseOpacity;
+                this.vx = 0; this.vy = 0;
+            }
+            update() {
+                this.x += this.speedX + 0.3 * this.depth + this.vx; this.y += this.speedY + this.vy;
+                this.vx *= 0.95; this.vy *= 0.95;
+                const dx = this.x - mouse.x, dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 180) {
+                    const force = (180 - dist) / 180, angle = Math.atan2(dy, dx);
+                    this.x += Math.cos(angle) * force * 2 * this.depth; this.y += Math.sin(angle) * force * 2 * this.depth;
+                    this.opacity = Math.min(1, this.baseOpacity + force * 0.8);
+                } else if (this.opacity > this.baseOpacity) this.opacity -= 0.05;
+                if (blast.active) {
+                    const bdx = this.x - blast.x, bdy = this.y - blast.y, bDist = Math.sqrt(bdx * bdx + bdy * bdy);
+                    if (bDist < 300) {
+                        const force = (300 - bDist) / 300, angle = Math.atan2(bdy, bdx);
+                        this.vx += Math.cos(angle) * force * 20 * this.depth; this.vy += Math.sin(angle) * force * 20 * this.depth;
+                        this.opacity = 1;
+                    }
+                }
+                if (this.y > height || this.x > width + 50 || this.x < -50) this.reset(false);
+            }
+            draw() { ctx.fillStyle = `rgba(42, 245, 255, ${this.opacity})`; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+        }
+
+        const initParticles = () => { particles = []; const count = width < 768 ? 150 : 500; for (let i = 0; i < count; i++) particles.push(new Particle()); };
+        const animateParticles = () => { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); };
+        window.addEventListener('resize', () => { resize(); initParticles(); });
+        resize(); initParticles(); animateParticles();
+
+        // --- 7. Scroll Spy & Time ---
+        const sections = document.querySelectorAll('.screen-section');
+        const navLinks = document.querySelectorAll('.nav-btn');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${entry.target.id}`) link.classList.add('active');
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+        sections.forEach(sec => observer.observe(sec));
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('sys-time').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+        }, 1000);
+    });
+    </script>
+</body>
+</html>
