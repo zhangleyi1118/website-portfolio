@@ -559,8 +559,17 @@
             position: fixed; bottom: 0; left: 0; width: 100%; height: 30px;
             background: var(--panel-bg); border-top: 1px solid rgba(255,255,255,0.1);
             display: flex; gap: 30px; align-items: center; padding: 0 40px;
+            justify-content: space-between;
             font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); z-index: 1000;
         }
+
+        /* Sound Toggle Btn */
+        .sound-toggle {
+            background: none; border: 1px solid rgba(255,255,255,0.1); color: var(--text-sub);
+            padding: 2px 8px; cursor: pointer; font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+            transition: 0.3s; display: flex; align-items: center; gap: 5px;
+        }
+        .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
         @media (max-width: 768px) {
             .hero-layout { flex-direction: column; text-align: center; transform: translateY(0); }
@@ -881,12 +890,96 @@
     </main>
 
     <footer class="bottom-status-bar">
-        <div class="bar-item">SYS_STATUS: STABLE</div>
-        <div class="bar-item">VER: 4.8.2 KINETIC_VOXEL</div>
+        <div class="left-group" style="display:flex; gap:30px;">
+            <div class="bar-item">SYS_STATUS: STABLE</div>
+            <div class="bar-item">VER: 4.8.2 KINETIC_VOXEL</div>
+        </div>
+        <button id="sound-toggle" class="sound-toggle">
+            <span class="icon">🔊</span> AUDIO: OFF
+        </button>
     </footer>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+
+        // --- 0. AUDIO SYSTEM (Web Audio API) ---
+        // 生成“系统”风格音效，无需外部文件
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = true; // 默认静音，需要用户交互开启
+        
+        const soundToggleBtn = document.getElementById('sound-toggle');
+
+        const toggleSound = () => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            isMuted = !isMuted;
+            soundToggleBtn.classList.toggle('active', !isMuted);
+            soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
+            if(!isMuted) playSound('click'); // 测试音
+        };
+
+        soundToggleBtn.addEventListener('click', toggleSound);
+
+        const playSound = (type) => {
+            if (isMuted) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'hover') {
+                // 短促的高频滴声
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'click') {
+                // 确认感的低频嘟声
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'type') {
+                // 极短的打字音
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1500, now);
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
+                osc.start(now);
+                osc.stop(now + 0.01);
+            } else if (type === 'boot') {
+                // 开机音效
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(800, now + 0.4);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.1, now + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+        };
+
+        // 绑定音效到UI元素
+        const bindSound = (selector, type, soundType) => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.addEventListener(type, () => playSound(soundType));
+            });
+        };
+
+        // 绑定悬停音效 (Hover)
+        bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close', 'mouseenter', 'hover');
+        
+        // 绑定点击音效 (Click)
+        bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
+
 
         // --- 1. Loading Logic ---
         const loadingScreen = document.getElementById('loading-screen');
@@ -908,6 +1001,9 @@
                     })
                     .join('');
                 
+                // 播放打字音
+                if (Math.random() > 0.5) playSound('type');
+
                 if(iterations >= finalString.length) clearInterval(interval);
                 iterations += 1/2; 
             }, 40);
@@ -930,6 +1026,13 @@
         }, 40);
 
         enterBtn.addEventListener('click', () => {
+            // 用户首次交互，自动开启声音并播放开机音
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            isMuted = false;
+            soundToggleBtn.classList.add('active');
+            soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
+            playSound('boot');
+
             loadingScreen.classList.add('fade-out');
             buildVoxels(); 
         });
@@ -1011,7 +1114,12 @@
         };
 
         const voxelContainer = document.querySelector('.voxel-container');
-        if (voxelContainer) voxelContainer.addEventListener('click', buildVoxels);
+        if (voxelContainer) {
+            voxelContainer.addEventListener('click', () => {
+                playSound('click'); // 点击核心时播放
+                buildVoxels();
+            });
+        }
 
         // --- 3. Enhanced 3D Tilt (Text Cards and Connect Only) ---
         const tiltCards = document.querySelectorAll('.connect-card, .intel-row'); // Removed tech-card from tilt logic as carousel handles it
@@ -1146,6 +1254,7 @@
         const mLink = document.getElementById('modal-link');
 
         const openModal = (dataset) => {
+            playSound('click'); // 播放点击音
             mTitle.innerText = dataset.title || 'UNKNOWN DATA';
             mDesc.innerText = dataset.desc || 'No description available.';
             mId.innerText = dataset.id || 'N/A';
@@ -1186,7 +1295,10 @@
 
         modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
         modal.addEventListener('click', (e) => {
-            if(e.target === modal) modal.classList.remove('active');
+            if(e.target === modal) {
+                modal.classList.remove('active');
+                playSound('click'); // 关闭也播放一下
+            }
         });
 
 
@@ -1278,6 +1390,3 @@
 </body>
 
 </html>
-
-
-
