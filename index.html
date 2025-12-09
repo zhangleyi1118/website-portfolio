@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEYIZHANG // GAME DESIGNER</title>
+    <title>JOKLUMARKAR // SYSTEM TERMINAL</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     
@@ -902,10 +902,15 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- 0. AUDIO SYSTEM (Web Audio API) ---
-        // 生成“系统”风格音效，无需外部文件
+        // --- 0. AUDIO SYSTEM (Hybrid: File + Synth) ---
+        
+        // 1. 预加载外部音频文件
+        // 确保你的目录下有 sound/click.mp3
+        const clickSfx = new Audio('sound/click.mp3');
+        clickSfx.volume = 0.6; // 设置音量 (0.0 - 1.0)
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let isMuted = true; // 默认静音，需要用户交互开启
+        let isMuted = true; // 默认静音
         
         const soundToggleBtn = document.getElementById('sound-toggle');
 
@@ -914,19 +919,28 @@
             isMuted = !isMuted;
             soundToggleBtn.classList.toggle('active', !isMuted);
             soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
-            if(!isMuted) playSound('click'); // 测试音
+            if(!isMuted) playSound('click'); // 测试播放
         };
 
         soundToggleBtn.addEventListener('click', toggleSound);
 
         const playSound = (type) => {
             if (isMuted) return;
+
+            // === A. 优先播放文件音效 ===
+            if (type === 'click') {
+                // 重置播放进度，允许快速连点
+                clickSfx.currentTime = 0;
+                clickSfx.play().catch(e => console.warn('Audio File Play Error:', e));
+                return;
+            }
+
+            // === B. 其他音效暂时保留合成音 (Fallback) ===
+            const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-
-            const now = audioCtx.currentTime;
 
             if (type === 'hover') {
                 // 短促的高频滴声
@@ -937,15 +951,6 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
                 osc.start(now);
                 osc.stop(now + 0.05);
-            } else if (type === 'click') {
-                // 确认感的低频嘟声
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
             } else if (type === 'type') {
                 // 极短的打字音
                 osc.type = 'square';
@@ -977,7 +982,7 @@
         // 绑定悬停音效 (Hover)
         bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close', 'mouseenter', 'hover');
         
-        // 绑定点击音效 (Click)
+        // 绑定点击音效 (Click) - 现在会播放 mp3
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
 
 
@@ -1390,4 +1395,3 @@
 </body>
 
 </html>
-
