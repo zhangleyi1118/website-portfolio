@@ -902,12 +902,15 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- 0. AUDIO SYSTEM (Hybrid: File + Synth) ---
+        // --- 0. AUDIO SYSTEM (音频系统) ---
         
         // 1. 预加载外部音频文件
-        // 确保你的目录下有 sound/click.mp3
+        // 确保你的 sound 文件夹里有 click.mp3 和 in.mp3
         const clickSfx = new Audio('sound/click.mp3');
-        clickSfx.volume = 0.6; // 设置音量 (0.0 - 1.0)
+        clickSfx.volume = 0.6; 
+
+        const bootSfx = new Audio('sound/in.mp3'); // [新增] 加载进入音效
+        bootSfx.volume = 0.8; 
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = true; // 默认静音
@@ -919,7 +922,9 @@
             isMuted = !isMuted;
             soundToggleBtn.classList.toggle('active', !isMuted);
             soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
-            if(!isMuted) playSound('click'); // 测试播放
+            
+            // 开启声音时测试一下点击音
+            if(!isMuted) playSound('click'); 
         };
 
         soundToggleBtn.addEventListener('click', toggleSound);
@@ -927,15 +932,24 @@
         const playSound = (type) => {
             if (isMuted) return;
 
-            // === A. 优先播放文件音效 ===
+            // === A. 优先播放文件音效 (MP3) ===
+            
+            // 1. 点击音效
             if (type === 'click') {
-                // 重置播放进度，允许快速连点
-                clickSfx.currentTime = 0;
-                clickSfx.play().catch(e => console.warn('Audio File Play Error:', e));
+                clickSfx.currentTime = 0; // 重置进度
+                clickSfx.play().catch(e => console.warn('Click sound error:', e));
                 return;
             }
 
-            // === B. 其他音效暂时保留合成音 (Fallback) ===
+            // 2. [修改点] 进入网页音效 (Boot)
+            if (type === 'boot') {
+                bootSfx.currentTime = 0;
+                bootSfx.play().catch(e => console.warn('Boot sound error:', e));
+                return;
+            }
+
+            // === B. 其他音效 (合成音 Fallback) ===
+            // 这里保留了 hover 和 type 的合成音，你也可以用同样的方法替换它们
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -943,7 +957,7 @@
             gain.connect(audioCtx.destination);
 
             if (type === 'hover') {
-                // 短促的高频滴声
+                // 悬停音：高频短促
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
@@ -952,24 +966,15 @@
                 osc.start(now);
                 osc.stop(now + 0.05);
             } else if (type === 'type') {
-                // 极短的打字音
+                // 打字音：极短的方波
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1500, now);
                 gain.gain.setValueAtTime(0.02, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
                 osc.start(now);
                 osc.stop(now + 0.01);
-            } else if (type === 'boot') {
-                // 开机音效
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(800, now + 0.4);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.1, now + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-                osc.start(now);
-                osc.stop(now + 0.8);
-            }
+            } 
+            // 注意：原来的 'boot' 合成音代码删掉了，因为上面已经处理了 type === 'boot'
         };
 
         // 绑定音效到UI元素
@@ -979,10 +984,7 @@
             });
         };
 
-        // 绑定悬停音效 (Hover)
         bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close', 'mouseenter', 'hover');
-        
-        // 绑定点击音效 (Click) - 现在会播放 mp3
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
 
 
@@ -1006,7 +1008,6 @@
                     })
                     .join('');
                 
-                // 播放打字音
                 if (Math.random() > 0.5) playSound('type');
 
                 if(iterations >= finalString.length) clearInterval(interval);
@@ -1031,11 +1032,13 @@
         }, 40);
 
         enterBtn.addEventListener('click', () => {
-            // 用户首次交互，自动开启声音并播放开机音
+            // 用户点击 [ACCESS GRANTED] 进入
             if(audioCtx.state === 'suspended') audioCtx.resume();
             isMuted = false;
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
+            
+            // 这里会触发我们刚才修改的 'boot' 逻辑，播放 in.mp3
             playSound('boot');
 
             loadingScreen.classList.add('fade-out');
@@ -1121,13 +1124,13 @@
         const voxelContainer = document.querySelector('.voxel-container');
         if (voxelContainer) {
             voxelContainer.addEventListener('click', () => {
-                playSound('click'); // 点击核心时播放
+                playSound('click'); 
                 buildVoxels();
             });
         }
 
-        // --- 3. Enhanced 3D Tilt (Text Cards and Connect Only) ---
-        const tiltCards = document.querySelectorAll('.connect-card, .intel-row'); // Removed tech-card from tilt logic as carousel handles it
+        // --- 3. Enhanced 3D Tilt ---
+        const tiltCards = document.querySelectorAll('.connect-card, .intel-row'); 
         const holoModel = document.querySelector('.js-tilt-3d');
 
         document.addEventListener('mousemove', (e) => {
@@ -1161,7 +1164,6 @@
         let startX = 0;
         let lastX = 0;
         
-        // Modified: Reduced radius to match smaller cards
         const radius = window.innerWidth < 768 ? 180 : 320; 
         const totalItems = carouselItems.length;
         const anglePerItem = 360 / totalItems;
@@ -1180,7 +1182,6 @@
                 const scale = 0.6 + (depthRatio * 0.4); 
                 const opacity = 0.3 + (depthRatio * 0.7); 
 
-                // Modified: Lifted up by -30px to clear slider
                 item.style.transform = `translate3d(${x}px, -30px, ${z}px) scale(${scale})`;
                 item.style.opacity = opacity;
                 item.style.zIndex = Math.floor(z); 
@@ -1259,7 +1260,7 @@
         const mLink = document.getElementById('modal-link');
 
         const openModal = (dataset) => {
-            playSound('click'); // 播放点击音
+            playSound('click'); 
             mTitle.innerText = dataset.title || 'UNKNOWN DATA';
             mDesc.innerText = dataset.desc || 'No description available.';
             mId.innerText = dataset.id || 'N/A';
@@ -1302,7 +1303,7 @@
         modal.addEventListener('click', (e) => {
             if(e.target === modal) {
                 modal.classList.remove('active');
-                playSound('click'); // 关闭也播放一下
+                playSound('click'); 
             }
         });
 
@@ -1395,4 +1396,5 @@
 </body>
 
 </html>
+
 
