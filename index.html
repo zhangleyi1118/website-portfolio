@@ -91,15 +91,8 @@
         .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; }
         .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear; }
         .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
-
-        #enter-btn {
-            margin-top: 30px; background: transparent; border: none; cursor: pointer; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
-            opacity: 0; transform: translateY(10px); transition: 0.5s;
-            /* 按钮虽然保留在DOM中，但因为会自动跳转，实际上用户几乎看不到了 */
-        }
-        #enter-btn.show { opacity: 1; transform: translateY(0); }
-        #enter-btn:hover { letter-spacing: 2px; text-shadow: 0 0 10px var(--ice-cyan); }
-
+        
+        #enter-btn { display: none; } /* 隐藏原来的按钮 */
 
         /* ==================== 2. GLOBAL VISUALS ==================== */
 
@@ -114,7 +107,6 @@
             z-index: -3; pointer-events: none; 
         }
 
-        /* Frost Layer */
         #frost-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2; pointer-events: none;
@@ -147,7 +139,6 @@
             background: radial-gradient(circle, transparent 50%, #000 120%); pointer-events: none; z-index: 899;
         }
 
-        /* Click Ripple */
         .click-ripple {
             position: fixed; transform: translate(-50%, -50%);
             border-radius: 50%; background: transparent;
@@ -513,6 +504,7 @@
             background: rgba(255,255,255,0.02); border-left: 3px solid rgba(255,255,255,0.1); 
             padding: 20px; display: flex; align-items: center; 
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;
+            cursor: pointer;
         }
         .intel-row:hover { background: rgba(42, 245, 255, 0.15); border-left: 4px solid var(--ice-cyan); box-shadow: 0 0 30px rgba(42, 245, 255, 0.1); transform: translateX(10px); }
         .intel-icon { 
@@ -572,6 +564,30 @@
         }
         .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
+        /* === GAME MODAL STYLE (NEW) === */
+        #game-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 3000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #game-overlay.active { opacity: 1; pointer-events: all; }
+        .game-wrapper {
+            position: relative; border: 2px solid var(--ice-cyan); box-shadow: 0 0 50px rgba(42,245,255,0.2);
+            background: #111;
+        }
+        canvas#miner-canvas { display: block; background: radial-gradient(circle at center, #1a2a33 0%, #0b0f14 100%); }
+        .game-ui-layer {
+            position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; color: var(--ice-cyan); pointer-events: none;
+        }
+        .game-close {
+            margin-top: 20px; padding: 10px 30px; background: transparent; color: var(--ice-cyan);
+            border: 1px solid var(--ice-cyan); cursor: pointer; font-family: 'Rajdhani', sans-serif;
+            transition: 0.3s;
+        }
+        .game-close:hover { background: var(--ice-cyan); color: #000; }
+
         @media (max-width: 768px) {
             .hero-layout { flex-direction: column; text-align: center; transform: translateY(0); }
             .hero-left, .hero-right { width: 100%; flex: 0 0 100%; }
@@ -583,9 +599,10 @@
             :root { --cube-s: 20px; } 
             .modal-body { flex-direction: column; }
             .modal-img { height: 200px; }
-            /* Mobile Carousel Adjustment */
             .carousel-item { width: 220px; }
             .carousel-scene { height: 400px; }
+            /* Mobile Game Adjust */
+            canvas#miner-canvas { width: 95vw; height: 60vh; }
         }
     </style>
 </head>
@@ -613,12 +630,8 @@
                     <span id="load-percent">00%</span>
                 </div>
             </div>
-
-            <button id="enter-btn" class="hidden">
-                <span class="deco-bracket">[</span> 
-                <span class="btn-text">ACCESS GRANTED</span> 
-                <span class="deco-bracket">]</span>
-            </button>
+            
+            <button id="enter-btn">ACCESS GRANTED</button>
         </div>
         <div class="vignette-overlay"></div>
     </div>
@@ -653,6 +666,17 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="game-overlay">
+        <div class="game-wrapper">
+            <div class="game-ui-layer">
+                <span id="game-score">SCORE: 0</span>
+                <span id="game-status">READY</span>
+            </div>
+            <canvas id="miner-canvas" width="600" height="400"></canvas>
+        </div>
+        <button class="game-close" onclick="closeGame()">TERMINATE SIMULATION</button>
     </div>
 
     <header class="top-bar">
@@ -849,6 +873,16 @@
                     </div>
                     <button class="download-btn">ACCESS DETAILS</button>
                 </div>
+                
+                <div class="intel-row" id="game-trigger">
+                    <div class="intel-icon">GAME</div>
+                    <div class="intel-info">
+                        <h4>资源采集模拟 (Mining Sim)</h4>
+                        <span class="intel-sub">Interactive Module // 0.8MB</span>
+                    </div>
+                    <button class="download-btn">INITIATE</button>
+                </div>
+
             </div>
         </section>
 
@@ -905,15 +939,13 @@
 
         // --- 0. AUDIO SYSTEM (音频系统) ---
         
-        // 1. 预加载外部音频文件
         const clickSfx = new Audio('sound/click.mp3');
         clickSfx.volume = 0.6; 
-
-        const bootSfx = new Audio('sound/in.mp3'); // 加载进入音效
+        const bootSfx = new Audio('sound/in.mp3'); 
         bootSfx.volume = 0.8; 
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let isMuted = true; // 默认静音
+        let isMuted = true;
         
         const soundToggleBtn = document.getElementById('sound-toggle');
 
@@ -922,8 +954,6 @@
             isMuted = !isMuted;
             soundToggleBtn.classList.toggle('active', !isMuted);
             soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
-            
-            // 开启声音时测试一下点击音
             if(!isMuted) playSound('click'); 
         };
 
@@ -931,24 +961,13 @@
 
         const playSound = (type) => {
             if (isMuted) return;
-
-            // === A. 优先播放文件音效 (MP3) ===
-            
-            // 1. 点击音效
             if (type === 'click') {
-                clickSfx.currentTime = 0; // 重置进度
-                clickSfx.play().catch(e => console.warn('Click sound error:', e));
-                return;
+                clickSfx.currentTime = 0; clickSfx.play().catch(e => console.warn(e)); return;
             }
-
-            // 2. 进入网页音效 (Boot)
             if (type === 'boot') {
-                bootSfx.currentTime = 0;
-                bootSfx.play().catch(e => console.warn('Boot sound error:', e));
-                return;
+                bootSfx.currentTime = 0; bootSfx.play().catch(e => console.warn(e)); return;
             }
 
-            // === B. 其他音效 (合成音 Fallback) ===
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -956,99 +975,81 @@
             gain.connect(audioCtx.destination);
 
             if (type === 'hover') {
-                // 悬停音：高频短促
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
                 gain.gain.setValueAtTime(0.05, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                osc.start(now);
-                osc.stop(now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
             } else if (type === 'type') {
-                // 打字音：极短的方波
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1500, now);
                 gain.gain.setValueAtTime(0.02, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
-                osc.start(now);
-                osc.stop(now + 0.01);
-            } 
+                osc.start(now); osc.stop(now + 0.01);
+            } else if (type === 'coin') { // 增加金币音效
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.linearRampToValueAtTime(1800, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
         };
 
-        // 绑定音效到UI元素
         const bindSound = (selector, type, soundType) => {
             document.querySelectorAll(selector).forEach(el => {
                 el.addEventListener(type, () => playSound(soundType));
             });
         };
 
-        bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close', 'mouseenter', 'hover');
-        bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
+        bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close, .game-close', 'mouseenter', 'hover');
+        bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .game-close', 'click', 'click');
 
 
-        // --- 1. Loading Logic (MODIFIED) ---
+        // --- 1. Loading Logic ---
         const loadingScreen = document.getElementById('loading-screen');
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
-        const enterBtn = document.getElementById('enter-btn');
         const decodeText = document.querySelector('.decode-text');
         const finalMsg = decodeText.getAttribute('data-final');
 
-        // 文字乱码解密特效
         const textScramble = (element, finalString) => {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_#@';
             let iterations = 0;
             const interval = setInterval(() => {
-                element.innerText = finalString
-                    .split('')
-                    .map((letter, index) => {
+                element.innerText = finalString.split('').map((letter, index) => {
                         if(index < iterations) return finalString[index];
                         return chars[Math.floor(Math.random() * chars.length)];
-                    })
-                    .join('');
-                
+                    }).join('');
                 if (Math.random() > 0.5) playSound('type');
-
                 if(iterations >= finalString.length) clearInterval(interval);
                 iterations += 1/2; 
             }, 40);
         };
 
-        // 定义进入主界面的函数 (Auto Enter Function)
         const enterSite = () => {
-            // 尝试恢复音频上下文 (浏览器策略可能会阻止非交互的自动播放)
             if(audioCtx.state === 'suspended') {
-                audioCtx.resume().catch(e => console.log("Autoplay blocked by browser policy"));
+                audioCtx.resume().catch(e => console.log("Autoplay blocked"));
             }
-            
             isMuted = false;
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
-            
-            // 播放进入音效
             playSound('boot');
-
-            // 执行淡出动画和3D场景构建
             loadingScreen.classList.add('fade-out');
             buildVoxels(); 
         };
 
-        // 加载进度模拟
         let progress = 0;
         const loadInterval = setInterval(() => {
             progress += Math.random() * 3; 
             if (progress > 100) progress = 100;
             loadingBar.style.width = `${progress}%`;
             loadPercent.innerText = `${Math.floor(progress)}%`;
-            
             if (progress >= 100) {
                 clearInterval(loadInterval);
                 textScramble(decodeText, finalMsg);
-                
-                // 【修改点】加载完成后延迟800ms，自动进入主界面
-                setTimeout(() => {
-                    enterSite();
-                }, 800); 
+                setTimeout(() => { enterSite(); }, 800); 
             }
         }, 40);
 
@@ -1137,7 +1138,7 @@
             });
         }
 
-        // --- 3. Enhanced 3D Tilt ---
+        // --- 3. Enhanced 3D Tilt (MODIFIED: REDUCED EFFECT) ---
         const tiltCards = document.querySelectorAll('.connect-card, .intel-row'); 
         const holoModel = document.querySelector('.js-tilt-3d');
 
@@ -1145,18 +1146,21 @@
             const x = e.clientX, y = e.clientY;
             const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
 
+            // [修改点1] 减弱卡片视差：除数从30增加到100，使晃动更微弱
             tiltCards.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                const dx = (x - (rect.left + rect.width/2)) / 30;
-                const dy = (y - (rect.top + rect.height/2)) / 30;
+                const dx = (x - (rect.left + rect.width/2)) / 100; 
+                const dy = (y - (rect.top + rect.height/2)) / 100;
                 el.style.transform = `rotateX(${-dy}deg) rotateY(${dx}deg)`;
             });
 
+            // [修改点2] 减弱Voxel核心视差：减少旋转角度系数
             if(holoModel) {
                 const stage = holoModel.querySelector('.voxel-stage');
                 if(stage) {
                     const dx = (x - cx) / cx, dy = (y - cy) / cy;
-                    stage.style.transform = `translate3d(${dx * -20}px, ${dy * -20}px, 0) rotateX(${-10 + (-dy * 25)}deg) rotateY(${15 + (dx * 35)}deg)`;
+                    // 原先 rotateY(dx * 35)，现在改为 10
+                    stage.style.transform = `translate3d(${dx * -10}px, ${dy * -10}px, 0) rotateX(${-10 + (-dy * 10)}deg) rotateY(${15 + (dx * 10)}deg)`;
                 }
             }
         });
@@ -1178,83 +1182,47 @@
 
         const updateCarousel = () => {
             currentRotation += (targetRotation - currentRotation) * 0.1;
-
             carouselItems.forEach((item, index) => {
                 const itemAngle = (index * anglePerItem) + currentRotation;
                 const radian = itemAngle * (Math.PI / 180);
-
                 const x = Math.sin(radian) * radius;
                 const z = Math.cos(radian) * radius;
-                
                 const depthRatio = (z + radius) / (2 * radius); 
                 const scale = 0.6 + (depthRatio * 0.4); 
                 const opacity = 0.3 + (depthRatio * 0.7); 
-
                 item.style.transform = `translate3d(${x}px, -30px, ${z}px) scale(${scale})`;
                 item.style.opacity = opacity;
                 item.style.zIndex = Math.floor(z); 
-
-                if (z > radius - 100) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                if (z > radius - 100) item.classList.add('active');
+                else item.classList.remove('active');
             });
-
             const normalizedRot = (currentRotation % 360 + 360) % 360; 
             const sliderPct = 100 - (normalizedRot / 360 * 100);
             sliderThumb.style.left = `${sliderPct}%`;
-
             requestAnimationFrame(updateCarousel);
         };
 
-        const onDragStart = (x) => {
-            isDragging = true;
-            startX = x;
-            lastX = x;
-            carouselScene.style.cursor = 'grabbing';
-        };
-
-        const onDragMove = (x) => {
-            if (!isDragging) return;
-            const delta = x - lastX;
-            targetRotation += delta * 0.5; 
-            lastX = x;
-        };
-
-        const onDragEnd = () => {
-            isDragging = false;
-            carouselScene.style.cursor = 'grab';
-        };
+        const onDragStart = (x) => { isDragging = true; startX = x; lastX = x; carouselScene.style.cursor = 'grabbing'; };
+        const onDragMove = (x) => { if (!isDragging) return; const delta = x - lastX; targetRotation += delta * 0.5; lastX = x; };
+        const onDragEnd = () => { isDragging = false; carouselScene.style.cursor = 'grab'; };
 
         carouselScene.addEventListener('mousedown', e => onDragStart(e.clientX));
         window.addEventListener('mousemove', e => onDragMove(e.clientX));
         window.addEventListener('mouseup', onDragEnd);
-
         carouselScene.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX));
         window.addEventListener('touchmove', e => onDragMove(e.touches[0].clientX));
         window.addEventListener('touchend', onDragEnd);
 
         const sliderTrack = document.querySelector('.slider-track');
         let sliderDragging = false;
-
-        sliderTrack.addEventListener('mousedown', (e) => {
-            sliderDragging = true;
-            updateFromSlider(e);
-        });
-        window.addEventListener('mousemove', (e) => {
-            if(sliderDragging) updateFromSlider(e);
-        });
+        sliderTrack.addEventListener('mousedown', (e) => { sliderDragging = true; updateFromSlider(e); });
+        window.addEventListener('mousemove', (e) => { if(sliderDragging) updateFromSlider(e); });
         window.addEventListener('mouseup', () => sliderDragging = false);
-
         const updateFromSlider = (e) => {
             const rect = sliderTrack.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            x = Math.max(0, Math.min(x, rect.width));
-            const delta = (e.movementX || 0) * -1;
-            targetRotation += delta;
+            let x = e.clientX - rect.left; x = Math.max(0, Math.min(x, rect.width));
+            const delta = (e.movementX || 0) * -1; targetRotation += delta;
         }
-
         updateCarousel();
 
 
@@ -1268,55 +1236,217 @@
         const mLink = document.getElementById('modal-link');
 
         const openModal = (dataset) => {
+            // [新增] 检查是不是游戏触发器
+            if(dataset.id === 'GAME_MINER') return; 
+
             playSound('click'); 
             mTitle.innerText = dataset.title || 'UNKNOWN DATA';
             mDesc.innerText = dataset.desc || 'No description available.';
             mId.innerText = dataset.id || 'N/A';
             mLink.href = dataset.link || '#';
-            if (dataset.img) {
-                mImg.src = dataset.img;
-                mImg.parentElement.style.display = 'block'; 
-            } else {
-                mImg.parentElement.style.display = 'none'; 
-            }
+            if (dataset.img) { mImg.src = dataset.img; mImg.parentElement.style.display = 'block'; } 
+            else { mImg.parentElement.style.display = 'none'; }
             modal.classList.add('active');
         };
 
         let clickStartX = 0;
         document.querySelectorAll('.carousel-item').forEach(item => {
             item.addEventListener('mousedown', e => clickStartX = e.clientX);
-            item.addEventListener('click', e => {
-                if (Math.abs(e.clientX - clickStartX) < 5) {
-                    openModal(item.dataset);
-                }
-            });
-            item.addEventListener('touchstart', e => clickStartX = e.touches[0].clientX);
-            item.addEventListener('touchend', e => {
-                const endX = e.changedTouches[0].clientX;
-                if (Math.abs(endX - clickStartX) < 5) {
-                    openModal(item.dataset);
-                }
-            });
+            item.addEventListener('click', e => { if (Math.abs(e.clientX - clickStartX) < 5) openModal(item.dataset); });
         });
 
         document.querySelectorAll('.download-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation(); 
                 const row = btn.closest('.intel-row');
-                openModal(row.dataset);
+                // 检查是否是游戏
+                if(row.id === 'game-trigger') {
+                    openGame();
+                } else {
+                    openModal(row.dataset);
+                }
             });
         });
 
         modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
-        modal.addEventListener('click', (e) => {
-            if(e.target === modal) {
-                modal.classList.remove('active');
-                playSound('click'); 
+        modal.addEventListener('click', (e) => { if(e.target === modal) { modal.classList.remove('active'); playSound('click'); } });
+
+
+        // --- 6. GOLD MINER MINI-GAME LOGIC (NEW) ---
+        const gameOverlay = document.getElementById('game-overlay');
+        const gameCanvas = document.getElementById('miner-canvas');
+        const gCtx = gameCanvas.getContext('2d');
+        const scoreDisplay = document.getElementById('game-score');
+        const statusDisplay = document.getElementById('game-status');
+        
+        let gameLoopId;
+        let gameActive = false;
+        let score = 0;
+
+        // 钩子参数
+        const hook = {
+            x: 300, y: 20, length: 50, angle: 0, 
+            da: 2, // 摆动速度
+            state: 0, // 0:摆动, 1:射出, 2:拉回
+            speed: 10,
+            targetObj: null
+        };
+        // 矿物列表
+        let minerals = [];
+
+        window.openGame = () => {
+            playSound('click');
+            gameOverlay.classList.add('active');
+            gameActive = true;
+            score = 0;
+            initLevel();
+            loopGame();
+        };
+
+        window.closeGame = () => {
+            gameOverlay.classList.remove('active');
+            gameActive = false;
+            cancelAnimationFrame(gameLoopId);
+        };
+
+        const initLevel = () => {
+            minerals = [];
+            // 生成随机矿石 (x, y, radius, value, type)
+            // Type: 0=Gold(Fast), 1=Rock(Heavy)
+            for(let i=0; i<6; i++) {
+                minerals.push({
+                    x: randomRange(50, 550), y: randomRange(100, 350),
+                    r: randomRange(15, 25), val: 100, type: 0
+                });
+            }
+            for(let i=0; i<4; i++) {
+                minerals.push({
+                    x: randomRange(50, 550), y: randomRange(100, 350),
+                    r: randomRange(20, 35), val: 20, type: 1
+                });
+            }
+            hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
+            scoreDisplay.innerText = `SCORE: ${score}`;
+        };
+
+        // 游戏点击事件 (发射)
+        gameCanvas.addEventListener('mousedown', () => {
+            if(gameActive && hook.state === 0) {
+                hook.state = 1;
+                playSound('click');
             }
         });
 
+        const loopGame = () => {
+            if(!gameActive) return;
+            updateGame();
+            drawGame();
+            gameLoopId = requestAnimationFrame(loopGame);
+        };
 
-        // --- 6. Particles & Canvas ---
+        const updateGame = () => {
+            // 状态机
+            if(hook.state === 0) { // 摆动
+                hook.angle += hook.da;
+                if(hook.angle > 70 || hook.angle < -70) hook.da *= -1;
+            } 
+            else if (hook.state === 1) { // 发射
+                const rad = hook.angle * Math.PI / 180;
+                hook.length += hook.speed;
+                // 边界检测
+                let hx = hook.x + Math.sin(rad) * hook.length;
+                let hy = hook.y + Math.cos(rad) * hook.length;
+                if(hx < 0 || hx > 600 || hy > 400) {
+                    hook.state = 2; // 拉回
+                }
+                // 碰撞检测
+                for(let i=0; i<minerals.length; i++) {
+                    let m = minerals[i];
+                    if(!m.caught && Math.hypot(m.x - hx, m.y - hy) < m.r) {
+                        hook.state = 2;
+                        hook.targetObj = m;
+                        m.caught = true;
+                        playSound('hover'); // 抓取音效
+                        break;
+                    }
+                }
+            } 
+            else if (hook.state === 2) { // 拉回
+                let pullSpeed = hook.speed;
+                if(hook.targetObj) {
+                    // 金子轻，石头重
+                    if(hook.targetObj.type === 0) pullSpeed = 5; 
+                    else pullSpeed = 2; 
+                }
+                hook.length -= pullSpeed;
+                if(hook.length <= 50) {
+                    hook.length = 50;
+                    hook.state = 0;
+                    if(hook.targetObj) {
+                        score += hook.targetObj.val;
+                        scoreDisplay.innerText = `SCORE: ${score}`;
+                        playSound('coin');
+                        // 移除已抓物体
+                        minerals = minerals.filter(m => m !== hook.targetObj);
+                        hook.targetObj = null;
+                        
+                        // 检查是否全清
+                        if(minerals.length === 0) {
+                            statusDisplay.innerText = "LEVEL CLEARED! RESETTING...";
+                            setTimeout(initLevel, 1500);
+                        }
+                    }
+                }
+            }
+        };
+
+        const drawGame = () => {
+            gCtx.clearRect(0, 0, 600, 400);
+            
+            // 绘制矿石
+            minerals.forEach(m => {
+                if(m.caught && hook.targetObj !== m) return; // 不绘制已抓取但不在钩子上的
+                
+                let renderX = m.x;
+                let renderY = m.y;
+                
+                // 如果被抓了，跟随钩子
+                if(hook.targetObj === m) {
+                    const rad = hook.angle * Math.PI / 180;
+                    renderX = hook.x + Math.sin(rad) * hook.length;
+                    renderY = hook.y + Math.cos(rad) * hook.length;
+                }
+
+                gCtx.beginPath();
+                gCtx.arc(renderX, renderY, m.r, 0, Math.PI*2);
+                gCtx.fillStyle = m.type === 0 ? '#FFD700' : '#888'; // 金色或灰色
+                gCtx.fill();
+                gCtx.strokeStyle = '#fff';
+                gCtx.lineWidth = 2;
+                gCtx.stroke();
+            });
+
+            // 绘制钩爪线
+            const rad = hook.angle * Math.PI / 180;
+            const endX = hook.x + Math.sin(rad) * hook.length;
+            const endY = hook.y + Math.cos(rad) * hook.length;
+
+            gCtx.beginPath();
+            gCtx.moveTo(hook.x, hook.y);
+            gCtx.lineTo(endX, endY);
+            gCtx.strokeStyle = '#2AF5FF';
+            gCtx.lineWidth = 2;
+            gCtx.stroke();
+
+            // 绘制钩子头
+            gCtx.beginPath();
+            gCtx.arc(endX, endY, 5, 0, Math.PI*2);
+            gCtx.fillStyle = '#2AF5FF';
+            gCtx.fill();
+        };
+
+
+        // --- 7. Particles & Canvas ---
         const canvas = document.getElementById('ice-particles');
         const ctx = canvas.getContext('2d');
         const frostLayer = document.getElementById('frost-layer');
@@ -1331,6 +1461,7 @@
         });
 
         document.addEventListener('mousedown', (e) => {
+            if(gameActive) return; // 游戏开启时不产生波纹，避免干扰
             const ripple = document.createElement('div');
             ripple.classList.add('click-ripple');
             ripple.style.left = `${e.clientX}px`; ripple.style.top = `${e.clientY}px`;
@@ -1379,7 +1510,7 @@
         window.addEventListener('resize', () => { resize(); initParticles(); });
         resize(); initParticles(); animateParticles();
 
-        // --- 7. Scroll Spy & Time ---
+        // --- 8. Scroll Spy & Time ---
         const sections = document.querySelectorAll('.screen-section');
         const navLinks = document.querySelectorAll('.nav-btn');
         const observer = new IntersectionObserver((entries) => {
@@ -1402,5 +1533,4 @@
     });
     </script>
 </body>
-
 </html>
