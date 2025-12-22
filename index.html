@@ -95,6 +95,7 @@
         #enter-btn {
             margin-top: 30px; background: transparent; border: none; cursor: pointer; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
             opacity: 0; transform: translateY(10px); transition: 0.5s;
+            /* 按钮虽然保留在DOM中，但因为会自动跳转，实际上用户几乎看不到了 */
         }
         #enter-btn.show { opacity: 1; transform: translateY(0); }
         #enter-btn:hover { letter-spacing: 2px; text-shadow: 0 0 10px var(--ice-cyan); }
@@ -905,11 +906,10 @@
         // --- 0. AUDIO SYSTEM (音频系统) ---
         
         // 1. 预加载外部音频文件
-        // 确保你的 sound 文件夹里有 click.mp3 和 in.mp3
         const clickSfx = new Audio('sound/click.mp3');
         clickSfx.volume = 0.6; 
 
-        const bootSfx = new Audio('sound/in.mp3'); // [新增] 加载进入音效
+        const bootSfx = new Audio('sound/in.mp3'); // 加载进入音效
         bootSfx.volume = 0.8; 
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -941,7 +941,7 @@
                 return;
             }
 
-            // 2. [修改点] 进入网页音效 (Boot)
+            // 2. 进入网页音效 (Boot)
             if (type === 'boot') {
                 bootSfx.currentTime = 0;
                 bootSfx.play().catch(e => console.warn('Boot sound error:', e));
@@ -949,7 +949,6 @@
             }
 
             // === B. 其他音效 (合成音 Fallback) ===
-            // 这里保留了 hover 和 type 的合成音，你也可以用同样的方法替换它们
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -974,7 +973,6 @@
                 osc.start(now);
                 osc.stop(now + 0.01);
             } 
-            // 注意：原来的 'boot' 合成音代码删掉了，因为上面已经处理了 type === 'boot'
         };
 
         // 绑定音效到UI元素
@@ -988,7 +986,7 @@
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
 
 
-        // --- 1. Loading Logic ---
+        // --- 1. Loading Logic (MODIFIED) ---
         const loadingScreen = document.getElementById('loading-screen');
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
@@ -996,6 +994,7 @@
         const decodeText = document.querySelector('.decode-text');
         const finalMsg = decodeText.getAttribute('data-final');
 
+        // 文字乱码解密特效
         const textScramble = (element, finalString) => {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_#@';
             let iterations = 0;
@@ -1015,35 +1014,44 @@
             }, 40);
         };
 
+        // 定义进入主界面的函数 (Auto Enter Function)
+        const enterSite = () => {
+            // 尝试恢复音频上下文 (浏览器策略可能会阻止非交互的自动播放)
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(e => console.log("Autoplay blocked by browser policy"));
+            }
+            
+            isMuted = false;
+            soundToggleBtn.classList.add('active');
+            soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
+            
+            // 播放进入音效
+            playSound('boot');
+
+            // 执行淡出动画和3D场景构建
+            loadingScreen.classList.add('fade-out');
+            buildVoxels(); 
+        };
+
+        // 加载进度模拟
         let progress = 0;
         const loadInterval = setInterval(() => {
             progress += Math.random() * 3; 
             if (progress > 100) progress = 100;
             loadingBar.style.width = `${progress}%`;
             loadPercent.innerText = `${Math.floor(progress)}%`;
+            
             if (progress >= 100) {
                 clearInterval(loadInterval);
                 textScramble(decodeText, finalMsg);
+                
+                // 【修改点】加载完成后延迟800ms，自动进入主界面
                 setTimeout(() => {
-                    enterBtn.classList.remove('hidden');
-                    enterBtn.classList.add('show');
-                }, 500);
+                    enterSite();
+                }, 800); 
             }
         }, 40);
 
-        enterBtn.addEventListener('click', () => {
-            // 用户点击 [ACCESS GRANTED] 进入
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            isMuted = false;
-            soundToggleBtn.classList.add('active');
-            soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
-            
-            // 这里会触发我们刚才修改的 'boot' 逻辑，播放 in.mp3
-            playSound('boot');
-
-            loadingScreen.classList.add('fade-out');
-            buildVoxels(); 
-        });
 
         // --- 2. Voxel Builder ---
         const randomRange = (min, max) => Math.random() * (max - min) + min;
@@ -1396,6 +1404,3 @@
 </body>
 
 </html>
-
-
-
