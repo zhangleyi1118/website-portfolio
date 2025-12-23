@@ -13,6 +13,7 @@
             --panel-bg: #151a21;
             --ice-cyan: #2AF5FF;
             --ice-cyan-dim: rgba(42, 245, 255, 0.1);
+            --neon-green: #0f0;
             --danger-red: #ff2a6d;
             --text-main: #E6F1FF;
             --text-sub: #8b9bb4;
@@ -32,24 +33,30 @@
             overflow-x: hidden; 
         }
 
-        /* ==================== 1. LOADING SCREEN ==================== */
+        /* ==================== 1. LOADING SCREEN (OPTIMIZED) ==================== */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--void-bg);
             z-index: 9999;
             display: flex; justify-content: center; align-items: center;
-            transition: all 0.8s var(--ease-out-expo);
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, filter 0.8s ease-in-out; /* 优化过渡 */
             background-image: linear-gradient(rgba(42, 245, 255, 0.03) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(42, 245, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
+            transform-origin: center;
         }
 
-        #loading-screen.fade-out {
-            opacity: 0; pointer-events: none; transform: scale(1.1); filter: blur(10px);
+        /* 最终退场动画：缩放 + 模糊 + 透明 */
+        #loading-screen.granted-anim {
+            opacity: 0; 
+            transform: scale(1.5); 
+            filter: blur(15px);
+            pointer-events: none;
         }
 
         .loader-content {
             display: flex; flex-direction: column; align-items: center; width: 320px;
+            transition: opacity 0.5s;
         }
 
         /* Rune Animation */
@@ -62,7 +69,7 @@
             width: 20px; height: 20px; background: var(--ice-cyan); transform: rotate(45deg);
             box-shadow: 0 0 20px var(--ice-cyan);
             animation: diamond-pulse 2s infinite ease-in-out;
-            transition: all 0.3s;
+            transition: all 0.5s;
         }
         .rune-ring {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -81,10 +88,14 @@
             animation: scan-h 2s ease-in-out infinite;
         }
 
-        /* Loading Complete Effects */
-        .granted-anim .rune-container { transform: scale(1.5); }
-        .granted-anim .diamond-shape { background: #0f0; box-shadow: 0 0 50px #0f0; transform: rotate(225deg) scale(1.2); }
-        .granted-anim .rune-ring { border-color: #0f0; animation-duration: 1s; }
+        /* Loading Complete Internal State */
+        .success-state .diamond-shape { 
+            background: var(--neon-green); 
+            box-shadow: 0 0 60px var(--neon-green); 
+            transform: rotate(225deg) scale(1.4); 
+        }
+        .success-state .rune-ring { border-color: var(--neon-green); animation-duration: 0.5s; }
+        .success-state .bar-fill { background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); }
 
         @keyframes diamond-pulse { 0%,100%{transform:rotate(45deg) scale(1); opacity:1;} 50%{transform:rotate(45deg) scale(0.8); opacity:0.5;} }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -94,11 +105,27 @@
         /* Text & Bar */
         .loading-text-group { width: 100%; text-align: center; }
         .decode-text {
-            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 30px;
-            transition: all 0.3s;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 40px;
+            transition: opacity 0.3s; /* 文字淡入淡出 */
         }
-        .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; }
-        .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear; }
+        /* 故障文字特效类 */
+        .glitch-text-active {
+            color: var(--neon-green);
+            text-shadow: 2px 0 var(--text-main), -2px 0 #ff00c1;
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            font-size: 1.8rem;
+        }
+        @keyframes glitch-skew {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear, background 0.3s; }
         .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
         
         #enter-btn { display: none; } 
@@ -573,17 +600,18 @@
         }
         .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
-        /* === EMBEDDED GAME STYLE (NEW) === */
-        .embedded-game-wrapper {
-            position: relative;
+        /* === EMBEDDED GAME STYLE (NEW - SEPARATE SECTION) === */
+        /* 游戏容器全屏适应 */
+        .game-container-full {
             width: 100%;
-            height: 450px;
+            height: 60vh;
+            min-height: 500px;
             background: #080a0c;
             border: 1px solid var(--ice-cyan);
-            margin-top: 20px;
             box-shadow: 0 0 30px rgba(42, 245, 255, 0.05) inset;
-            overflow: hidden;
+            position: relative;
             display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
         }
 
         canvas#miner-canvas { 
@@ -599,9 +627,9 @@
         }
         
         .game-ui-layer {
-            position: absolute; top: 15px; left: 20px; right: 20px; 
+            position: absolute; top: 20px; left: 30px; right: 30px; 
             display: flex; justify-content: space-between;
-            font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; 
+            font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; 
             color: var(--ice-cyan); pointer-events: none;
             z-index: 5;
             text-shadow: 0 0 10px var(--ice-cyan);
@@ -610,7 +638,7 @@
         .game-cover {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(4px);
             display: flex; justify-content: center; align-items: center; flex-direction: column;
             z-index: 10;
             transition: opacity 0.3s;
@@ -618,18 +646,25 @@
         .game-cover.hidden { opacity: 0; pointer-events: none; }
         
         .start-game-btn {
-            padding: 15px 40px;
+            padding: 20px 50px;
             background: transparent;
             border: 2px solid var(--ice-cyan);
             color: var(--ice-cyan);
             font-family: 'Rajdhani', sans-serif;
-            font-size: 1.5rem; letter-spacing: 3px;
+            font-size: 1.8rem; letter-spacing: 4px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(42, 245, 255, 0.2);
+            box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
             transition: 0.3s;
+            position: relative; overflow: hidden;
         }
+        .start-game-btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(42, 245, 255, 0.5), transparent);
+            transition: 0.5s;
+        }
+        .start-game-btn:hover::before { left: 100%; }
         .start-game-btn:hover {
-            background: var(--ice-cyan); color: #000; box-shadow: 0 0 40px var(--ice-cyan);
+            background: rgba(42, 245, 255, 0.1); color: #fff; box-shadow: 0 0 50px var(--ice-cyan);
         }
 
         @media (max-width: 768px) {
@@ -645,7 +680,8 @@
             .modal-img { height: 200px; }
             .carousel-item { width: 220px; }
             .carousel-scene { height: 400px; }
-            .embedded-game-wrapper { height: 350px; }
+            .game-container-full { height: 400px; }
+            .start-game-btn { font-size: 1.2rem; padding: 15px 30px; }
         }
     </style>
 </head>
@@ -664,7 +700,7 @@
             </div>
             
             <div class="loading-text-group">
-                <div class="decode-text" data-final="NEURAL CONNECTING">INITIATING...</div>
+                <div class="decode-text" id="decode-text">INITIATING...</div>
                 <div class="loading-bar-fancy">
                     <div class="bar-fill"></div>
                 </div>
@@ -725,6 +761,7 @@
             <a href="#overview" class="nav-btn active">OVERVIEW</a>
             <a href="#archives" class="nav-btn">ARCHIVES</a>
             <a href="#analysis" class="nav-btn">ANALYSIS</a>
+            <a href="#simulation" class="nav-btn">SIMULATION</a>
             <a href="#connect" class="nav-btn">CONNECT</a>
         </nav>
         <div class="system-time" id="sys-time">00:00:00</div>
@@ -905,20 +942,28 @@
                     </div>
                     <button class="download-btn">ACCESS DETAILS</button>
                 </div>
+            </div>
+        </section>
 
-                <div class="embedded-game-wrapper">
-                    <div class="game-ui-layer">
-                        <span id="game-score">DATA: 0</span>
-                        <span id="game-status">IDLE</span>
-                    </div>
-                    <canvas id="miner-canvas" width="800" height="450"></canvas>
-                    <div class="game-cover" id="game-cover">
-                        <button class="start-game-btn" onclick="toggleGame()">
-                            [ INITIATE SIMULATION ]
-                        </button>
-                    </div>
+        <section id="simulation" class="screen-section">
+            <div class="section-head">
+                <div class="deco-square"></div>
+                <h2>NEURAL TRAINING</h2>
+                <div class="deco-line"></div>
+                <span class="idx">04</span>
+            </div>
+            
+            <div class="game-container-full">
+                <div class="game-ui-layer">
+                    <span id="game-score">DATA: 0</span>
+                    <span id="game-status">IDLE</span>
                 </div>
-                
+                <canvas id="miner-canvas"></canvas>
+                <div class="game-cover" id="game-cover">
+                    <button class="start-game-btn" onclick="toggleGame()">
+                        [ INITIATE SIMULATION ]
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -927,7 +972,7 @@
                 <div class="deco-square"></div>
                 <h2>TERMINAL CONNECT</h2>
                 <div class="deco-line"></div>
-                <span class="idx">04</span>
+                <span class="idx">05</span>
             </div>
             <div class="connect-grid">
                 <div class="connect-card contact-info js-tilt">
@@ -1051,11 +1096,11 @@
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .start-game-btn', 'click', 'click');
 
 
-        // --- 1. Loading Logic (UPDATED SEQUENCE) ---
+        // --- 1. Loading Logic (SMOOTHER TRANSITIONS) ---
         const loadingScreen = document.getElementById('loading-screen');
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
-        const decodeText = document.querySelector('.decode-text');
+        const decodeText = document.getElementById('decode-text');
         
         const enterSite = () => {
             if(audioCtx.state === 'suspended') {
@@ -1065,13 +1110,12 @@
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
             
-            loadingScreen.classList.add('fade-out');
             buildVoxels(); 
         };
 
         let progress = 0;
         const loadInterval = setInterval(() => {
-            progress += Math.random() * 3; 
+            progress += Math.random() * 2.5; 
             if (progress > 100) progress = 100;
             loadingBar.style.width = `${progress}%`;
             loadPercent.innerText = `${Math.floor(progress)}%`;
@@ -1079,27 +1123,31 @@
             if (progress >= 100) {
                 clearInterval(loadInterval);
                 
-                // --- STEP 1: 100% COMPLETE ---
+                // STEP 1: 100% REACHED - Internal State Change
                 loadingBar.style.width = '100%';
-                decodeText.innerText = "SYSTEM SYNCHRONIZED";
-                decodeText.style.color = "#2AF5FF";
-                decodeText.style.textShadow = "0 0 10px #2AF5FF";
+                loadingScreen.classList.add('success-state'); // Green theme trigger
 
-                // --- STEP 2: WAIT 1 SEC THEN SHOW EFFECT ---
+                // STEP 2: Smooth Text Transition (Fade Out Old)
+                decodeText.style.opacity = 0;
+
                 setTimeout(() => {
+                    // STEP 3: Change Text & Add Glitch Effect (Fade In New)
                     decodeText.innerText = "ACCESS GRANTED";
-                    decodeText.style.fontSize = "2.5rem"; // Make text bigger
-                    loadingScreen.classList.add('granted-anim'); // Trigger CSS Animation
-                    playSound('boot'); // Play big sound
+                    decodeText.classList.add('glitch-text-active');
+                    decodeText.style.opacity = 1; 
+                    playSound('boot');
                     
-                    // --- STEP 3: WAIT 1.5 SEC THEN ENTER ---
+                    // STEP 4: Hold for visual impact, then exit
                     setTimeout(() => {
-                        enterSite();
-                    }, 1500);
+                        loadingScreen.classList.add('granted-anim'); // Zoom out + Blur
+                        setTimeout(() => {
+                            enterSite();
+                        }, 800); // Slight delay for the blur to register
+                    }, 1200);
 
-                }, 1000);
+                }, 400); // Short delay for opacity fade
             }
-        }, 30); // Speed
+        }, 30); 
 
 
         // --- 2. Voxel Builder ---
@@ -1309,7 +1357,7 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) { modal.classList.remove('active'); playSound('click'); } });
 
 
-        // --- 6. EMBEDDED CYBER-MINER GAME (REFACTORED ART & POSITION) ---
+        // --- 6. CYBER-MINER GAME (IN SEPARATE SECTION) ---
         const gameCanvas = document.getElementById('miner-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const scoreDisplay = document.getElementById('game-score');
@@ -1358,13 +1406,13 @@
             minerals = [];
             // Type 0: Data Packet (Gold) - Blue/Cyan Cube
             // Type 1: Corrupted Sector (Rock) - Red/Dark Shape
-            for(let i=0; i<5; i++) {
+            for(let i=0; i<6; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
                     r: randomRange(20, 30), val: 100, type: 0, rotation: Math.random() * Math.PI
                 });
             }
-            for(let i=0; i<3; i++) {
+            for(let i=0; i<4; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
                     r: randomRange(25, 40), val: 20, type: 1, rotation: Math.random() * Math.PI
