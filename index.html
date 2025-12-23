@@ -14,7 +14,7 @@
             --ice-cyan: #2AF5FF;
             --ice-cyan-dim: rgba(42, 245, 255, 0.1);
             --neon-gold: #FFD700;
-            --neon-green: #00FF99; /* 调整为更好看的青绿色 */
+            --neon-green: #00FF99;
             --danger-red: #ff2a6d;
             --text-main: #E6F1FF;
             --text-sub: #8b9bb4;
@@ -310,7 +310,7 @@
         }
         @keyframes blink-hint { 0%,100% {opacity:0.3;} 50% {opacity:0.8;} }
 
-        .voxel-char { position: absolute; transform-style: preserve-3d; top: 0; left: 0; }
+        .voxel-char { position: absolute; transform-style: preserve-3d; top: 0; left: 0; transition: transform 0.5s var(--ease-out-expo);}
         .float-slow { animation: char-float-deep 7s ease-in-out infinite alternate; }
         .float-mid  { animation: char-float-deep 6s ease-in-out infinite alternate-reverse; }
         .float-fast { animation: char-float-deep 5s ease-in-out infinite alternate; }
@@ -350,6 +350,11 @@
         .cube.type-dark .face { 
             background: rgba(0, 0, 0, 0.9); 
             border-color: rgba(42, 245, 255, 0.3); 
+        }
+        .cube.type-gold .face {
+            background: rgba(255, 215, 0, 0.4);
+            border-color: var(--neon-gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.2) inset;
         }
 
         .satellite {
@@ -678,13 +683,13 @@
         .reward-card.popup-green { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,153,0.3); }
         .reward-card.popup-green .reward-title { color: var(--neon-green); }
         .reward-card.popup-green .visual-box { border: 1px dashed var(--neon-green); background: rgba(0,255,153,0.05); }
-        .reward-card.popup-green .visual-box::after { content: 'SECURE'; color: var(--neon-green); opacity: 0.8; }
+        .reward-card.popup-green .visual-box::after { content: 'INSIGHT'; color: var(--neon-green); opacity: 0.8; }
 
         /* Styles for LARGE GOLD item */
         .reward-card.popup-gold { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
         .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
         .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
-        .reward-card.popup-gold .visual-box::after { content: 'HEAVY'; color: var(--neon-gold); font-weight: bold; }
+        .reward-card.popup-gold .visual-box::after { content: 'BASIC DATA'; color: var(--neon-gold); font-weight: bold; }
         
         .visual-box {
             width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
@@ -808,7 +813,7 @@
                     <h2 class="sub-header">ZLY // 逻辑编织者</h2>
                     <p class="hero-desc">
                         "世界由方块与逻辑堆砌而成。"<br>
-                        点击右侧核心，重构数据矩阵。<br>
+                        点击右侧核心，切换逻辑矩阵视图。<br>
                         在离散的像素中寻找连续的真理。
                     </p>
                     <div class="stats-row">
@@ -829,7 +834,7 @@
                         <div class="orbit-ring ring-outer"></div>
                         <div class="orbit-ring ring-inner"></div>
                         
-                        <div class="click-hint">>> CLICK CORE TO RECONSTRUCT <<</div>
+                        <div class="click-hint">>> CLICK CORE TO SWITCH PATTERN <<</div>
                     </div>
                 </div>
             </div>
@@ -979,21 +984,21 @@
         <section id="simulation" class="screen-section">
             <div class="section-head">
                 <div class="deco-square"></div>
-                <h2>NEURAL TRAINING</h2>
+                <h2>DATA MINING</h2>
                 <div class="deco-line"></div>
                 <span class="idx">04</span>
             </div>
             
             <div class="game-container-full">
                 <div class="game-ui-layer">
-                    <span id="game-score">DATA: 0</span>
+                    <span id="game-score">DATA COLLECTED: 0%</span>
                     <span id="game-status">IDLE</span>
                 </div>
                 <canvas id="miner-canvas"></canvas>
                 
                 <div class="game-cover" id="game-cover">
                     <button class="start-game-btn" onclick="toggleGame()">
-                        [ INITIATE SIMULATION ]
+                        [ INITIATE DATA MINING ]
                     </button>
                 </div>
 
@@ -1199,24 +1204,62 @@
         }, 30); 
 
 
-        // --- 2. Voxel Builder ---
+        // --- 2. Voxel Builder (Updated with word cycling) ---
         const randomRange = (min, max) => Math.random() * (max - min) + min;
+
+        // Expanded Font Map for new words
+        const fontMap = {
+            Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
+            L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
+            Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]],
+            A: [[0,0,2,0,0],[0,1,0,1,0],[2,1,1,1,2],[1,0,0,0,1],[2,0,0,0,2]],
+            C: [[0,2,1,1,2],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[0,2,1,1,2]],
+            E: [[2,1,1,1,2],[1,0,0,0,0],[2,1,1,0,0],[1,0,0,0,0],[2,1,1,1,2]],
+            T: [[2,1,1,1,2],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,2,0,0]],
+            O: [[0,2,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,2,1,1,0]],
+            P: [[2,1,1,1,0],[1,0,0,0,1],[2,1,1,1,0],[1,0,0,0,0],[2,0,0,0,0]],
+            N: [[2,0,0,0,2],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[2,0,0,0,2]],
+            1: [[0,0,2,0,0],[0,1,2,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,2,1,2,0]]
+        };
+
+        // Layout configurations for different words
+        const wordPatterns = [
+            // PATTERN 1: ZLY
+            [
+                { char: 'Z', pos: { x: -80, y: 60, z: -120 }, rot: { x: randomRange(-5,5), y: -25, z: 5 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: 'L', pos: { x: 100, y: 30, z: -20 }, rot: { x: 5, y: 30, z: 0 }, scale: 1.2, floatClass: 'float-mid', colorMod: 'normal' },
+                { char: 'Y', pos: { x: 0, y: -60, z: 120 }, rot: { x: 5, y: 0, z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'bright' }
+            ],
+            // PATTERN 2: ACE
+            [
+                { char: 'A', pos: { x: -90, y: 0, z: 0 }, rot: { x: 0, y: -20, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' },
+                { char: 'C', pos: { x: 0, y: 20, z: 50 }, rot: { x: 10, y: 0, z: 0 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'normal' },
+                { char: 'E', pos: { x: 90, y: -20, z: -50 }, rot: { x: 0, y: 20, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' }
+            ],
+            // PATTERN 3: TOP
+            [
+                { char: 'T', pos: { x: 0, y: 80, z: -50 }, rot: { x: 10, y: 0, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'normal' },
+                { char: 'O', pos: { x: -60, y: -40, z: 50 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.3, floatClass: 'float-mid', colorMod: 'bright' },
+                { char: 'P', pos: { x: 60, y: -40, z: 50 }, rot: { x: 0, y: 15, z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'dark' }
+            ],
+            // PATTERN 4: NO1
+            [
+                { char: 'N', pos: { x: -80, y: 0, z: 0 }, rot: { x: 0, y: -20, z: 5 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'dark' },
+                { char: 'O', pos: { x: 20, y: 0, z: -40 }, rot: { x: 0, y: 0, z: 0 }, scale: 1.2, floatClass: 'float-slow', colorMod: 'normal' },
+                { char: '1', pos: { x: 100, y: 20, z: 80 }, rot: { x: 0, y: 30, z: -5 }, scale: 1.6, floatClass: 'float-fast', colorMod: 'bright' }
+            ]
+        ];
+
+        let currentPatternIndex = 0;
 
         const buildVoxels = () => {
             const stage = document.getElementById('voxel-stage');
             if (!stage) return; 
             stage.innerHTML = '';
             const size = 34; 
-            const fontMap = {
-                Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
-                L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
-                Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]]
-            };
-            const layoutConfig = [
-                { char: 'Z', pos: { x: -80 + randomRange(-10,10), y: 60 + randomRange(-10,10), z: -120 }, rot: { x: randomRange(-5,5), y: -25 + randomRange(-5,5), z: 5 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
-                { char: 'L', pos: { x: 100 + randomRange(-10,10), y: 30 + randomRange(-10,10), z: -20 }, rot: { x: 5, y: 30 + randomRange(-5,5), z: 0 }, scale: 1.2, floatClass: 'float-mid', colorMod: 'normal' },
-                { char: 'Y', pos: { x: 0, y: -60 + randomRange(-10,10), z: 120 }, rot: { x: 5, y: 0 + randomRange(-5,5), z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'bright' }
-            ];
+            
+            // Get current pattern config
+            const layoutConfig = wordPatterns[currentPatternIndex];
 
             const createSatellite = (parentCube) => {
                 const sat = document.createElement('div');
@@ -1249,6 +1292,8 @@
 
             layoutConfig.forEach(conf => {
                 const grid = fontMap[conf.char];
+                if (!grid) return;
+
                 const charContainer = document.createElement('div');
                 charContainer.className = `voxel-char ${conf.floatClass}`;
                 charContainer.style.setProperty('--px', `${conf.pos.x}px`);
@@ -1279,6 +1324,8 @@
         if (voxelContainer) {
             voxelContainer.addEventListener('click', () => {
                 playSound('click'); 
+                // Cycle through patterns
+                currentPatternIndex = (currentPatternIndex + 1) % wordPatterns.length;
                 buildVoxels();
             });
         }
@@ -1458,22 +1505,22 @@
 
         const initLevel = () => {
             minerals = [];
-            // Type 0: Small (Original Green)
-            // Type 1: Large (New Gold)
-            for(let i=0; i<6; i++) {
+            // Type 0: Secure Key (Insight/Fast/Green)
+            // Type 1: Raw Data (Background/Heavy/Gold)
+            for(let i=0; i<5; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
-                    r: randomRange(20, 30), val: 100, type: 0, rotation: Math.random() * Math.PI
+                    r: randomRange(15, 25), val: 15, type: 0, rotation: Math.random() * Math.PI
                 });
             }
-            for(let i=0; i<4; i++) {
+            for(let i=0; i<3; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
-                    r: randomRange(25, 40), val: 20, type: 1, rotation: Math.random() * Math.PI
+                    r: randomRange(30, 45), val: 5, type: 1, rotation: Math.random() * Math.PI
                 });
             }
             hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
-            scoreDisplay.innerText = `DATA: ${score}`;
+            scoreDisplay.innerText = `DATA COLLECTED: ${score}%`;
         };
 
         // Input
@@ -1525,8 +1572,8 @@
             else if (hook.state === 2) { // Pull
                 let pullSpeed = hook.speed;
                 if(hook.targetObj) {
-                    if(hook.targetObj.type === 0) pullSpeed = 10; 
-                    else pullSpeed = 4; 
+                    if(hook.targetObj.type === 0) pullSpeed = 12; // Light (Fast)
+                    else pullSpeed = 5; // Heavy (Slow)
                 }
                 hook.length -= pullSpeed;
                 
@@ -1553,16 +1600,16 @@
             rewardCard.classList.remove('popup-green', 'popup-gold');
             
             if (obj.type === 0) {
-                // SMALL (GREEN)
+                // SMALL (GREEN) -> HIGH VALUE
                 rewardCard.classList.add('popup-green');
-                rewardTitle.innerText = "SECURE KEY";
-                rewardDesc.innerText = "High-speed encrypted data key retrieved.";
+                rewardTitle.innerText = "CORE MEMORY";
+                rewardDesc.innerText = "Unlocked specific personality trait. Data density: HIGH.";
                 playSound('coin');
             } else {
-                // LARGE (GOLD)
+                // LARGE (GOLD) -> MEDIUM VALUE
                 rewardCard.classList.add('popup-gold');
-                rewardTitle.innerText = "RAW GOLD ORE";
-                rewardDesc.innerText = "Heavy unprocessed data chunk. High value.";
+                rewardTitle.innerText = "RAW DATA BLOCK";
+                rewardDesc.innerText = "General background information processed. Data density: MED.";
                 playSound('rare');
             }
         };
@@ -1573,7 +1620,8 @@
             // Logic to collect
             if(hook.targetObj) {
                 score += hook.targetObj.val;
-                scoreDisplay.innerText = `DATA: ${score} MB`;
+                if(score > 100) score = 100;
+                scoreDisplay.innerText = `DATA COLLECTED: ${score}%`;
                 minerals = minerals.filter(m => m !== hook.targetObj);
                 hook.targetObj = null;
             }
@@ -1585,9 +1633,9 @@
             playSound('click');
 
             // Check Clear
-            if(minerals.length === 0) {
-                statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
-                setTimeout(initLevel, 1500);
+            if(minerals.length === 0 || score >= 100) {
+                statusDisplay.innerText = "PROFILE SYNCHRONIZED COMPLETE.";
+                setTimeout(initLevel, 2000);
             }
         };
 
