@@ -1213,40 +1213,27 @@
             L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
             Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]],
             A: [[0,0,2,0,0],[0,1,0,1,0],[2,1,1,1,2],[1,0,0,0,1],[2,0,0,0,2]],
-            C: [[0,2,1,1,2],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[0,2,1,1,2]],
-            E: [[2,1,1,1,2],[1,0,0,0,0],[2,1,1,0,0],[1,0,0,0,0],[2,1,1,1,2]],
-            T: [[2,1,1,1,2],[0,0,1,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,0,2,0,0]],
-            O: [[0,2,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,2,1,1,0]],
-            P: [[2,1,1,1,0],[1,0,0,0,1],[2,1,1,1,0],[1,0,0,0,0],[2,0,0,0,0]],
-            N: [[2,0,0,0,2],[1,1,0,0,1],[1,0,1,0,1],[1,0,0,1,1],[2,0,0,0,2]],
-            1: [[0,0,2,0,0],[0,1,2,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,2,1,2,0]]
+            '+': [[0,0,1,0,0],[0,0,1,0,0],[1,1,2,1,1],[0,0,1,0,0],[0,0,1,0,0]],
+            '0': [[0,2,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,2,1,1,0]],
+            '1': [[0,0,2,0,0],[0,1,2,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,2,1,2,0]]
         };
 
         // Layout configurations for different words
         const wordPatterns = [
-            // PATTERN 1: ZLY
+            // PATTERN 1: LY
             [
-                { char: 'Z', pos: { x: -80, y: 60, z: -120 }, rot: { x: randomRange(-5,5), y: -25, z: 5 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
-                { char: 'L', pos: { x: 100, y: 30, z: -20 }, rot: { x: 5, y: 30, z: 0 }, scale: 1.2, floatClass: 'float-mid', colorMod: 'normal' },
-                { char: 'Y', pos: { x: 0, y: -60, z: 120 }, rot: { x: 5, y: 0, z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'bright' }
+                { char: 'L', pos: { x: -50, y: 10, z: 20 }, rot: { x: 5, y: -20, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: 'Y', pos: { x: 50, y: -10, z: -20 }, rot: { x: -5, y: 20, z: 0 }, scale: 1.5, floatClass: 'float-mid', colorMod: 'bright' }
             ],
-            // PATTERN 2: ACE
+            // PATTERN 2: A+
             [
-                { char: 'A', pos: { x: -90, y: 0, z: 0 }, rot: { x: 0, y: -20, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' },
-                { char: 'C', pos: { x: 0, y: 20, z: 50 }, rot: { x: 10, y: 0, z: 0 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'normal' },
-                { char: 'E', pos: { x: 90, y: -20, z: -50 }, rot: { x: 0, y: 20, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' }
+                { char: 'A', pos: { x: -60, y: 0, z: 0 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.6, floatClass: 'float-mid', colorMod: 'normal' },
+                { char: '+', pos: { x: 60, y: 40, z: 30 }, rot: { x: 0, y: 15, z: 5 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'bright' }
             ],
-            // PATTERN 3: TOP
+            // PATTERN 3: 01
             [
-                { char: 'T', pos: { x: 0, y: 80, z: -50 }, rot: { x: 10, y: 0, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'normal' },
-                { char: 'O', pos: { x: -60, y: -40, z: 50 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.3, floatClass: 'float-mid', colorMod: 'bright' },
-                { char: 'P', pos: { x: 60, y: -40, z: 50 }, rot: { x: 0, y: 15, z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'dark' }
-            ],
-            // PATTERN 4: NO1
-            [
-                { char: 'N', pos: { x: -80, y: 0, z: 0 }, rot: { x: 0, y: -20, z: 5 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'dark' },
-                { char: 'O', pos: { x: 20, y: 0, z: -40 }, rot: { x: 0, y: 0, z: 0 }, scale: 1.2, floatClass: 'float-slow', colorMod: 'normal' },
-                { char: '1', pos: { x: 100, y: 20, z: 80 }, rot: { x: 0, y: 30, z: -5 }, scale: 1.6, floatClass: 'float-fast', colorMod: 'bright' }
+                { char: '0', pos: { x: -50, y: 0, z: -30 }, rot: { x: 5, y: -10, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: '1', pos: { x: 50, y: 0, z: 30 }, rot: { x: -5, y: 10, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' }
             ]
         ];
 
