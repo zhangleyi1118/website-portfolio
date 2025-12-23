@@ -14,7 +14,7 @@
             --ice-cyan: #2AF5FF;
             --ice-cyan-dim: rgba(42, 245, 255, 0.1);
             --neon-gold: #FFD700;
-            --neon-green: #0f0;
+            --neon-green: #00FF99; /* 调整为更好看的青绿色 */
             --danger-red: #ff2a6d;
             --text-main: #E6F1FF;
             --text-sub: #8b9bb4;
@@ -674,17 +674,17 @@
         }
         .game-reward-modal.active .reward-card { transform: translateY(0); }
 
-        /* Styles for NORMAL item (Rock) */
-        .reward-card.popup-normal { border-color: var(--danger-red); box-shadow: 0 0 20px rgba(255,42,109,0.2); }
-        .reward-card.popup-normal .reward-title { color: var(--danger-red); }
-        .reward-card.popup-normal .visual-box { border: 1px dashed var(--danger-red); background: rgba(255,42,109,0.05); }
-        .reward-card.popup-normal .visual-box::after { content: 'CORRUPTED'; color: var(--danger-red); opacity: 0.5; }
+        /* Styles for SMALL GREEN item */
+        .reward-card.popup-green { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,153,0.3); }
+        .reward-card.popup-green .reward-title { color: var(--neon-green); }
+        .reward-card.popup-green .visual-box { border: 1px dashed var(--neon-green); background: rgba(0,255,153,0.05); }
+        .reward-card.popup-green .visual-box::after { content: 'SECURE'; color: var(--neon-green); opacity: 0.8; }
 
-        /* Styles for RARE item (Gold) */
-        .reward-card.popup-rare { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.3); }
-        .reward-card.popup-rare .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
-        .reward-card.popup-rare .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
-        .reward-card.popup-rare .visual-box::after { content: 'ENCRYPTED'; color: var(--neon-gold); font-weight: bold; }
+        /* Styles for LARGE GOLD item */
+        .reward-card.popup-gold { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
+        .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
+        .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
+        .reward-card.popup-gold .visual-box::after { content: 'HEAVY'; color: var(--neon-gold); font-weight: bold; }
         
         .visual-box {
             width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
@@ -1458,8 +1458,8 @@
 
         const initLevel = () => {
             minerals = [];
-            // Type 0: Data Packet (Gold)
-            // Type 1: Corrupted Sector (Rock)
+            // Type 0: Small (Original Green)
+            // Type 1: Large (New Gold)
             for(let i=0; i<6; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
@@ -1550,20 +1550,20 @@
             rewardModal.classList.add('active');
             
             // Remove old classes
-            rewardCard.classList.remove('popup-normal', 'popup-rare');
+            rewardCard.classList.remove('popup-green', 'popup-gold');
             
             if (obj.type === 0) {
-                // RARE (GOLD)
-                rewardCard.classList.add('popup-rare');
-                rewardTitle.innerText = "CORE SECRET";
-                rewardDesc.innerText = "Encrypted data fragment retrieved successfully.";
-                playSound('rare');
-            } else {
-                // NORMAL (ROCK)
-                rewardCard.classList.add('popup-normal');
-                rewardTitle.innerText = "CORRUPTED FILE";
-                rewardDesc.innerText = "Partial data recovered. High noise level.";
+                // SMALL (GREEN)
+                rewardCard.classList.add('popup-green');
+                rewardTitle.innerText = "SECURE KEY";
+                rewardDesc.innerText = "High-speed encrypted data key retrieved.";
                 playSound('coin');
+            } else {
+                // LARGE (GOLD)
+                rewardCard.classList.add('popup-gold');
+                rewardTitle.innerText = "RAW GOLD ORE";
+                rewardDesc.innerText = "Heavy unprocessed data chunk. High value.";
+                playSound('rare');
             }
         };
 
@@ -1613,11 +1613,11 @@
                 gCtx.rotate(m.rotation + (gameActive ? performance.now() * 0.001 : 0)); 
 
                 if (m.type === 0) {
-                    // GOLD (Now actually Gold/Yellow Neon)
-                    gCtx.shadowBlur = 20;
-                    gCtx.shadowColor = "#FFD700";
-                    gCtx.fillStyle = "rgba(255, 215, 0, 0.2)"; // Transparent Gold
-                    gCtx.strokeStyle = "#FFD700"; // Solid Gold Stroke
+                    // SMALL (GREEN)
+                    gCtx.shadowBlur = 15;
+                    gCtx.shadowColor = "#00FF99";
+                    gCtx.fillStyle = "rgba(0, 255, 153, 0.2)"; 
+                    gCtx.strokeStyle = "#00FF99"; 
                     gCtx.lineWidth = 2;
                     gCtx.strokeRect(-m.r/2, -m.r/2, m.r, m.r);
                     gCtx.fillRect(-m.r/2, -m.r/2, m.r, m.r);
@@ -1625,11 +1625,11 @@
                     gCtx.fillStyle = "#FFF";
                     gCtx.fillRect(-4, -4, 8, 8);
                 } else {
-                    // ROCK (Corrupted)
-                    gCtx.shadowBlur = 10;
-                    gCtx.shadowColor = "#ff2a6d";
-                    gCtx.fillStyle = "rgba(255, 42, 109, 0.3)";
-                    gCtx.strokeStyle = "#ff2a6d";
+                    // LARGE (GOLD)
+                    gCtx.shadowBlur = 20;
+                    gCtx.shadowColor = "#FFD700";
+                    gCtx.fillStyle = "rgba(255, 215, 0, 0.2)";
+                    gCtx.strokeStyle = "#FFD700";
                     gCtx.beginPath();
                     gCtx.moveTo(m.r, 0);
                     gCtx.lineTo(m.r * 0.5, m.r * 0.8);
