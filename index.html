@@ -13,6 +13,7 @@
             --panel-bg: #151a21;
             --ice-cyan: #2AF5FF;
             --ice-cyan-dim: rgba(42, 245, 255, 0.1);
+            --neon-gold: #FFD700;
             --neon-green: #0f0;
             --danger-red: #ff2a6d;
             --text-main: #E6F1FF;
@@ -33,20 +34,19 @@
             overflow-x: hidden; 
         }
 
-        /* ==================== 1. LOADING SCREEN (OPTIMIZED) ==================== */
+        /* ==================== 1. LOADING SCREEN ==================== */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--void-bg);
             z-index: 9999;
             display: flex; justify-content: center; align-items: center;
-            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, filter 0.8s ease-in-out; /* 优化过渡 */
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, filter 0.8s ease-in-out;
             background-image: linear-gradient(rgba(42, 245, 255, 0.03) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(42, 245, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
             transform-origin: center;
         }
 
-        /* 最终退场动画：缩放 + 模糊 + 透明 */
         #loading-screen.granted-anim {
             opacity: 0; 
             transform: scale(1.5); 
@@ -88,7 +88,6 @@
             animation: scan-h 2s ease-in-out infinite;
         }
 
-        /* Loading Complete Internal State */
         .success-state .diamond-shape { 
             background: var(--neon-green); 
             box-shadow: 0 0 60px var(--neon-green); 
@@ -106,9 +105,8 @@
         .loading-text-group { width: 100%; text-align: center; }
         .decode-text {
             font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 40px;
-            transition: opacity 0.3s; /* 文字淡入淡出 */
+            transition: opacity 0.3s;
         }
-        /* 故障文字特效类 */
         .glitch-text-active {
             color: var(--neon-green);
             text-shadow: 2px 0 var(--text-main), -2px 0 #ff00c1;
@@ -600,12 +598,14 @@
         }
         .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
-        /* === EMBEDDED GAME STYLE (NEW - SEPARATE SECTION) === */
-        /* 游戏容器全屏适应 */
+        /* === EMBEDDED GAME STYLE (SMALLER + POPUP) === */
+        
+        /* 游戏容器缩小版 */
         .game-container-full {
             width: 100%;
-            height: 60vh;
-            min-height: 500px;
+            max-width: 800px; /* 限制最大宽度 */
+            height: 400px;    /* 限制高度 */
+            margin: 0 auto;   /* 居中 */
             background: #080a0c;
             border: 1px solid var(--ice-cyan);
             box-shadow: 0 0 30px rgba(42, 245, 255, 0.05) inset;
@@ -627,9 +627,9 @@
         }
         
         .game-ui-layer {
-            position: absolute; top: 20px; left: 30px; right: 30px; 
+            position: absolute; top: 15px; left: 20px; right: 20px; 
             display: flex; justify-content: space-between;
-            font-family: 'Rajdhani', sans-serif; font-size: 1.4rem; 
+            font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; 
             color: var(--ice-cyan); pointer-events: none;
             z-index: 5;
             text-shadow: 0 0 10px var(--ice-cyan);
@@ -646,26 +646,57 @@
         .game-cover.hidden { opacity: 0; pointer-events: none; }
         
         .start-game-btn {
-            padding: 20px 50px;
+            padding: 15px 40px;
             background: transparent;
             border: 2px solid var(--ice-cyan);
             color: var(--ice-cyan);
             font-family: 'Rajdhani', sans-serif;
-            font-size: 1.8rem; letter-spacing: 4px;
+            font-size: 1.5rem; letter-spacing: 3px;
             cursor: pointer;
             box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
             transition: 0.3s;
-            position: relative; overflow: hidden;
         }
-        .start-game-btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(42, 245, 255, 0.5), transparent);
-            transition: 0.5s;
+        .start-game-btn:hover { background: rgba(42, 245, 255, 0.1); color: #fff; box-shadow: 0 0 50px var(--ice-cyan); }
+
+        /* === GAME REWARD POPUP === */
+        .game-reward-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 20; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
         }
-        .start-game-btn:hover::before { left: 100%; }
-        .start-game-btn:hover {
-            background: rgba(42, 245, 255, 0.1); color: #fff; box-shadow: 0 0 50px var(--ice-cyan);
+        .game-reward-modal.active { opacity: 1; pointer-events: all; }
+        
+        .reward-card {
+            width: 300px; padding: 25px; border: 1px solid #444; background: #111;
+            text-align: center; position: relative;
+            transform: translateY(20px); transition: 0.4s var(--ease-out-expo);
         }
+        .game-reward-modal.active .reward-card { transform: translateY(0); }
+
+        /* Styles for NORMAL item (Rock) */
+        .reward-card.popup-normal { border-color: var(--danger-red); box-shadow: 0 0 20px rgba(255,42,109,0.2); }
+        .reward-card.popup-normal .reward-title { color: var(--danger-red); }
+        .reward-card.popup-normal .visual-box { border: 1px dashed var(--danger-red); background: rgba(255,42,109,0.05); }
+        .reward-card.popup-normal .visual-box::after { content: 'CORRUPTED'; color: var(--danger-red); opacity: 0.5; }
+
+        /* Styles for RARE item (Gold) */
+        .reward-card.popup-rare { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.3); }
+        .reward-card.popup-rare .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
+        .reward-card.popup-rare .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
+        .reward-card.popup-rare .visual-box::after { content: 'ENCRYPTED'; color: var(--neon-gold); font-weight: bold; }
+        
+        .visual-box {
+            width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
+            font-family: 'Rajdhani'; letter-spacing: 2px;
+        }
+        .reward-title { font-family: 'Rajdhani'; font-size: 1.5rem; margin-bottom: 5px; }
+        .reward-desc { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
+        .collect-btn {
+            background: transparent; border: 1px solid #666; color: #fff; padding: 8px 25px;
+            font-family: 'Rajdhani'; cursor: pointer; transition: 0.2s;
+        }
+        .collect-btn:hover { background: #fff; color: #000; }
 
         @media (max-width: 768px) {
             .hero-layout { flex-direction: column; text-align: center; transform: translateY(0); }
@@ -680,7 +711,7 @@
             .modal-img { height: 200px; }
             .carousel-item { width: 220px; }
             .carousel-scene { height: 400px; }
-            .game-container-full { height: 400px; }
+            .game-container-full { height: 350px; }
             .start-game-btn { font-size: 1.2rem; padding: 15px 30px; }
         }
     </style>
@@ -959,11 +990,22 @@
                     <span id="game-status">IDLE</span>
                 </div>
                 <canvas id="miner-canvas"></canvas>
+                
                 <div class="game-cover" id="game-cover">
                     <button class="start-game-btn" onclick="toggleGame()">
                         [ INITIATE SIMULATION ]
                     </button>
                 </div>
+
+                <div id="game-reward-modal" class="game-reward-modal">
+                    <div id="reward-card" class="reward-card">
+                        <div class="visual-box"></div>
+                        <h4 id="reward-title" class="reward-title">ITEM_NAME</h4>
+                        <p id="reward-desc" class="reward-desc">ITEM_DESC</p>
+                        <button class="collect-btn" onclick="collectReward()">COLLECT [ENTER]</button>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -1083,6 +1125,13 @@
                 gain.gain.setValueAtTime(0.2, now);
                 gain.gain.linearRampToValueAtTime(0, now + 1.5);
                 osc.start(now); osc.stop(now + 1.5);
+            } else if (type === 'rare') { // Rare Item Sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.0);
+                osc.start(now); osc.stop(now + 1.0);
             }
         };
 
@@ -1125,7 +1174,7 @@
                 
                 // STEP 1: 100% REACHED - Internal State Change
                 loadingBar.style.width = '100%';
-                loadingScreen.classList.add('success-state'); // Green theme trigger
+                loadingScreen.classList.add('success-state'); 
 
                 // STEP 2: Smooth Text Transition (Fade Out Old)
                 decodeText.style.opacity = 0;
@@ -1139,13 +1188,13 @@
                     
                     // STEP 4: Hold for visual impact, then exit
                     setTimeout(() => {
-                        loadingScreen.classList.add('granted-anim'); // Zoom out + Blur
+                        loadingScreen.classList.add('granted-anim'); 
                         setTimeout(() => {
                             enterSite();
-                        }, 800); // Slight delay for the blur to register
+                        }, 800); 
                     }, 1200);
 
-                }, 400); // Short delay for opacity fade
+                }, 400); 
             }
         }, 30); 
 
@@ -1357,19 +1406,24 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) { modal.classList.remove('active'); playSound('click'); } });
 
 
-        // --- 6. CYBER-MINER GAME (IN SEPARATE SECTION) ---
+        // --- 6. CYBER-MINER GAME LOGIC (WITH REWARD POPUP) ---
         const gameCanvas = document.getElementById('miner-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const scoreDisplay = document.getElementById('game-score');
         const statusDisplay = document.getElementById('game-status');
         const gameCover = document.getElementById('game-cover');
+        const rewardModal = document.getElementById('game-reward-modal');
+        const rewardCard = document.getElementById('reward-card');
+        const rewardTitle = document.getElementById('reward-title');
+        const rewardDesc = document.getElementById('reward-desc');
         
         let gameLoopId;
         let gameActive = false;
+        let gamePaused = false; // New Pause State
         let score = 0;
         let canvasW, canvasH;
 
-        // 调整 Canvas 尺寸
+        // Resize
         const resizeGame = () => {
             const rect = gameCanvas.parentElement.getBoundingClientRect();
             gameCanvas.width = rect.width;
@@ -1378,25 +1432,25 @@
             canvasH = rect.height;
         };
         window.addEventListener('resize', resizeGame);
-        setTimeout(resizeGame, 500); // init call
+        setTimeout(resizeGame, 500); 
 
-        // 钩子参数
+        // Parameters
         const hook = {
             x: 400, y: 20, length: 50, angle: 0, 
             da: 2, 
-            state: 0, // 0:摆动, 1:射出, 2:拉回
-            speed: 15, // 加快速度
+            state: 0, // 0:Swing, 1:Shoot, 2:Pull, 3:Paused(Reward)
+            speed: 15, 
             targetObj: null
         };
         let minerals = [];
 
         window.toggleGame = () => {
-            if(gameActive) return; // 已经在运行
+            if(gameActive) return; 
             playSound('click');
             gameCover.classList.add('hidden');
             gameActive = true;
             statusDisplay.innerText = "STATUS: SCANNING...";
-            resizeGame(); // ensure size
+            resizeGame(); 
             hook.x = canvasW / 2;
             initLevel();
             loopGame();
@@ -1404,8 +1458,8 @@
 
         const initLevel = () => {
             minerals = [];
-            // Type 0: Data Packet (Gold) - Blue/Cyan Cube
-            // Type 1: Corrupted Sector (Rock) - Red/Dark Shape
+            // Type 0: Data Packet (Gold)
+            // Type 1: Corrupted Sector (Rock)
             for(let i=0; i<6; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
@@ -1422,37 +1476,41 @@
             scoreDisplay.innerText = `DATA: ${score}`;
         };
 
-        // 游戏点击事件 (发射)
+        // Input
         gameCanvas.addEventListener('mousedown', () => {
-            if(gameActive && hook.state === 0) {
+            if(gameActive && !gamePaused && hook.state === 0) {
                 hook.state = 1;
                 playSound('laser');
             }
         });
+        // Key bind for collecting reward
+        window.addEventListener('keydown', (e) => {
+            if(gamePaused && e.key === 'Enter') collectReward();
+        });
 
         const loopGame = () => {
             if(!gameActive) return;
-            updateGame();
-            drawGame();
+            if(!gamePaused) updateGame(); // Only update logic if not paused
+            drawGame(); // Always draw
             gameLoopId = requestAnimationFrame(loopGame);
         };
 
         const updateGame = () => {
-            // 状态机
-            if(hook.state === 0) { // 摆动
+            // State Machine
+            if(hook.state === 0) { // Swing
                 hook.angle += hook.da;
                 if(hook.angle > 75 || hook.angle < -75) hook.da *= -1;
             } 
-            else if (hook.state === 1) { // 发射
+            else if (hook.state === 1) { // Shoot
                 const rad = hook.angle * Math.PI / 180;
                 hook.length += hook.speed;
-                // 边界检测
+                // Bounds
                 let hx = hook.x + Math.sin(rad) * hook.length;
                 let hy = hook.y + Math.cos(rad) * hook.length;
                 if(hx < 0 || hx > canvasW || hy > canvasH) {
-                    hook.state = 2; // 拉回
+                    hook.state = 2; // Pull back empty
                 }
-                // 碰撞检测
+                // Collision
                 for(let i=0; i<minerals.length; i++) {
                     let m = minerals[i];
                     if(!m.caught && Math.hypot(m.x - hx, m.y - hy) < m.r) {
@@ -1464,38 +1522,80 @@
                     }
                 }
             } 
-            else if (hook.state === 2) { // 拉回
+            else if (hook.state === 2) { // Pull
                 let pullSpeed = hook.speed;
                 if(hook.targetObj) {
-                    // 数据包轻，坏扇区重
                     if(hook.targetObj.type === 0) pullSpeed = 10; 
                     else pullSpeed = 4; 
                 }
                 hook.length -= pullSpeed;
+                
+                // HAUL COMPLETE
                 if(hook.length <= 50) {
                     hook.length = 50;
-                    hook.state = 0;
+                    
                     if(hook.targetObj) {
-                        score += hook.targetObj.val;
-                        scoreDisplay.innerText = `DATA: ${score} MB`;
-                        playSound('coin');
-                        // 移除已抓物体
-                        minerals = minerals.filter(m => m !== hook.targetObj);
-                        hook.targetObj = null;
-                        
-                        if(minerals.length === 0) {
-                            statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
-                            setTimeout(initLevel, 1500);
-                        }
+                        // TRIGGER REWARD POPUP instead of instant collect
+                        showRewardPopup(hook.targetObj);
+                    } else {
+                        hook.state = 0; // Empty haul, reset
                     }
                 }
             }
         };
 
+        // --- POPUP LOGIC ---
+        const showRewardPopup = (obj) => {
+            gamePaused = true; // Pause game loop logic
+            rewardModal.classList.add('active');
+            
+            // Remove old classes
+            rewardCard.classList.remove('popup-normal', 'popup-rare');
+            
+            if (obj.type === 0) {
+                // RARE (GOLD)
+                rewardCard.classList.add('popup-rare');
+                rewardTitle.innerText = "CORE SECRET";
+                rewardDesc.innerText = "Encrypted data fragment retrieved successfully.";
+                playSound('rare');
+            } else {
+                // NORMAL (ROCK)
+                rewardCard.classList.add('popup-normal');
+                rewardTitle.innerText = "CORRUPTED FILE";
+                rewardDesc.innerText = "Partial data recovered. High noise level.";
+                playSound('coin');
+            }
+        };
+
+        window.collectReward = () => {
+            if (!gamePaused) return;
+            
+            // Logic to collect
+            if(hook.targetObj) {
+                score += hook.targetObj.val;
+                scoreDisplay.innerText = `DATA: ${score} MB`;
+                minerals = minerals.filter(m => m !== hook.targetObj);
+                hook.targetObj = null;
+            }
+            
+            // Reset UI
+            rewardModal.classList.remove('active');
+            gamePaused = false;
+            hook.state = 0; // Reset hook
+            playSound('click');
+
+            // Check Clear
+            if(minerals.length === 0) {
+                statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
+                setTimeout(initLevel, 1500);
+            }
+        };
+
+
         const drawGame = () => {
             gCtx.clearRect(0, 0, canvasW, canvasH);
             
-            // 绘制矿石 (Data Cubes & Glitches)
+            // Draw Minerals
             minerals.forEach(m => {
                 if(m.caught && hook.targetObj !== m) return; 
                 
@@ -1510,22 +1610,22 @@
 
                 gCtx.save();
                 gCtx.translate(renderX, renderY);
-                gCtx.rotate(m.rotation + (gameActive ? performance.now() * 0.001 : 0)); // 缓慢自转
+                gCtx.rotate(m.rotation + (gameActive ? performance.now() * 0.001 : 0)); 
 
                 if (m.type === 0) {
-                    // DATA CUBE (GOLD)
-                    gCtx.shadowBlur = 15;
-                    gCtx.shadowColor = "#2AF5FF";
-                    gCtx.fillStyle = "rgba(42, 245, 255, 0.2)";
-                    gCtx.strokeStyle = "#2AF5FF";
+                    // GOLD (Now actually Gold/Yellow Neon)
+                    gCtx.shadowBlur = 20;
+                    gCtx.shadowColor = "#FFD700";
+                    gCtx.fillStyle = "rgba(255, 215, 0, 0.2)"; // Transparent Gold
+                    gCtx.strokeStyle = "#FFD700"; // Solid Gold Stroke
                     gCtx.lineWidth = 2;
                     gCtx.strokeRect(-m.r/2, -m.r/2, m.r, m.r);
                     gCtx.fillRect(-m.r/2, -m.r/2, m.r, m.r);
-                    // Inner details
-                    gCtx.fillStyle = "#fff";
-                    gCtx.fillRect(-5, -5, 10, 10);
+                    // Core
+                    gCtx.fillStyle = "#FFF";
+                    gCtx.fillRect(-4, -4, 8, 8);
                 } else {
-                    // CORRUPTED SECTOR (ROCK)
+                    // ROCK (Corrupted)
                     gCtx.shadowBlur = 10;
                     gCtx.shadowColor = "#ff2a6d";
                     gCtx.fillStyle = "rgba(255, 42, 109, 0.3)";
@@ -1543,7 +1643,7 @@
                 gCtx.restore();
             });
 
-            // 绘制钩爪线 (Laser)
+            // Draw Laser
             const rad = hook.angle * Math.PI / 180;
             const endX = hook.x + Math.sin(rad) * hook.length;
             const endY = hook.y + Math.cos(rad) * hook.length;
@@ -1554,11 +1654,11 @@
             gCtx.lineTo(endX, endY);
             gCtx.strokeStyle = "rgba(42, 245, 255, 0.8)";
             gCtx.lineWidth = 2;
-            gCtx.setLineDash([5, 5]); // Dashed laser
+            gCtx.setLineDash([5, 5]); 
             gCtx.stroke();
             gCtx.restore();
 
-            // 绘制钩子头 (Probe)
+            // Draw Probe
             gCtx.save();
             gCtx.translate(endX, endY);
             gCtx.rotate(-rad);
@@ -1566,7 +1666,6 @@
             gCtx.shadowColor = "#fff";
             gCtx.fillStyle = "#fff";
             gCtx.beginPath();
-            // Triangle Probe
             gCtx.moveTo(0, 0);
             gCtx.lineTo(-5, -10);
             gCtx.lineTo(5, -10);
@@ -1595,7 +1694,7 @@
         });
 
         document.addEventListener('mousedown', (e) => {
-            if(gameActive && e.target === gameCanvas) return; // 游戏开启时不产生波纹，避免干扰
+            if(gameActive && e.target === gameCanvas) return; // Prevent interference
             const ripple = document.createElement('div');
             ripple.classList.add('click-ripple');
             ripple.style.left = `${e.clientX}px`; ripple.style.top = `${e.clientY}px`;
