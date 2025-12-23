@@ -13,6 +13,9 @@
             --panel-bg: #151a21;
             --ice-cyan: #2AF5FF;
             --ice-cyan-dim: rgba(42, 245, 255, 0.1);
+            --neon-gold: #FFD700;
+            --neon-green: #00FF99;
+            --danger-red: #ff2a6d;
             --text-main: #E6F1FF;
             --text-sub: #8b9bb4;
             --header-height: 70px;
@@ -37,22 +40,27 @@
             background-color: var(--void-bg);
             z-index: 9999;
             display: flex; justify-content: center; align-items: center;
-            transition: all 0.8s var(--ease-out-expo);
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, filter 0.8s ease-in-out;
             background-image: linear-gradient(rgba(42, 245, 255, 0.03) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(42, 245, 255, 0.03) 1px, transparent 1px);
             background-size: 40px 40px;
+            transform-origin: center;
         }
 
-        #loading-screen.fade-out {
-            opacity: 0; pointer-events: none; transform: scale(1.1); filter: blur(10px);
+        #loading-screen.granted-anim {
+            opacity: 0; 
+            transform: scale(1.5); 
+            filter: blur(15px);
+            pointer-events: none;
         }
 
         .loader-content {
             display: flex; flex-direction: column; align-items: center; width: 320px;
+            transition: opacity 0.5s;
         }
 
         /* Rune Animation */
-        .rune-container { position: relative; width: 100px; height: 100px; margin-bottom: 40px; }
+        .rune-container { position: relative; width: 100px; height: 100px; margin-bottom: 40px; transition: transform 0.5s; }
         .rune-core {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;
@@ -61,10 +69,12 @@
             width: 20px; height: 20px; background: var(--ice-cyan); transform: rotate(45deg);
             box-shadow: 0 0 20px var(--ice-cyan);
             animation: diamond-pulse 2s infinite ease-in-out;
+            transition: all 0.5s;
         }
         .rune-ring {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             border: 1px dashed rgba(42, 245, 255, 0.3); border-radius: 50%;
+            transition: all 0.5s;
         }
         .rune-ring.outer { animation: spin 10s linear infinite; }
         .rune-ring.middle { width: 70%; height: 70%; top: 15%; left: 15%; border-style: solid; border-color: transparent transparent var(--ice-cyan) var(--ice-cyan); opacity: 0.5; animation: spin 4s linear infinite reverse; }
@@ -78,6 +88,14 @@
             animation: scan-h 2s ease-in-out infinite;
         }
 
+        .success-state .diamond-shape { 
+            background: var(--neon-green); 
+            box-shadow: 0 0 60px var(--neon-green); 
+            transform: rotate(225deg) scale(1.4); 
+        }
+        .success-state .rune-ring { border-color: var(--neon-green); animation-duration: 0.5s; }
+        .success-state .bar-fill { background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); }
+
         @keyframes diamond-pulse { 0%,100%{transform:rotate(45deg) scale(1); opacity:1;} 50%{transform:rotate(45deg) scale(0.8); opacity:0.5;} }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes scan-v { 0%{transform:scaleY(0);opacity:0;} 50%{transform:scaleY(1);opacity:0.5;} 100%{transform:scaleY(0);opacity:0;} }
@@ -86,19 +104,29 @@
         /* Text & Bar */
         .loading-text-group { width: 100%; text-align: center; }
         .decode-text {
-            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 30px;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; color: var(--text-main); font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; min-height: 40px;
+            transition: opacity 0.3s;
         }
-        .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; }
-        .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear; }
+        .glitch-text-active {
+            color: var(--neon-green);
+            text-shadow: 2px 0 var(--text-main), -2px 0 #ff00c1;
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            font-size: 1.8rem;
+        }
+        @keyframes glitch-skew {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear, background 0.3s; }
         .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
-
-        #enter-btn {
-            margin-top: 30px; background: transparent; border: none; cursor: pointer; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
-            opacity: 0; transform: translateY(10px); transition: 0.5s;
-        }
-        #enter-btn.show { opacity: 1; transform: translateY(0); }
-        #enter-btn:hover { letter-spacing: 2px; text-shadow: 0 0 10px var(--ice-cyan); }
-
+        
+        #enter-btn { display: none; } 
 
         /* ==================== 2. GLOBAL VISUALS ==================== */
 
@@ -113,7 +141,6 @@
             z-index: -3; pointer-events: none; 
         }
 
-        /* Frost Layer */
         #frost-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2; pointer-events: none;
@@ -146,7 +173,6 @@
             background: radial-gradient(circle, transparent 50%, #000 120%); pointer-events: none; z-index: 899;
         }
 
-        /* Click Ripple */
         .click-ripple {
             position: fixed; transform: translate(-50%, -50%);
             border-radius: 50%; background: transparent;
@@ -284,7 +310,7 @@
         }
         @keyframes blink-hint { 0%,100% {opacity:0.3;} 50% {opacity:0.8;} }
 
-        .voxel-char { position: absolute; transform-style: preserve-3d; top: 0; left: 0; }
+        .voxel-char { position: absolute; transform-style: preserve-3d; top: 0; left: 0; transition: transform 0.5s var(--ease-out-expo);}
         .float-slow { animation: char-float-deep 7s ease-in-out infinite alternate; }
         .float-mid  { animation: char-float-deep 6s ease-in-out infinite alternate-reverse; }
         .float-fast { animation: char-float-deep 5s ease-in-out infinite alternate; }
@@ -325,6 +351,11 @@
             background: rgba(0, 0, 0, 0.9); 
             border-color: rgba(42, 245, 255, 0.3); 
         }
+        .cube.type-gold .face {
+            background: rgba(255, 215, 0, 0.4);
+            border-color: var(--neon-gold);
+            box-shadow: 0 0 20px rgba(255,215,0,0.2) inset;
+        }
 
         .satellite {
             position: absolute; width: 6px; height: 6px;
@@ -350,11 +381,11 @@
         @keyframes spin-ccw { from { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); } to { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); } }
 
 
-        /* ==================== 4. 3D CAROUSEL ARCHIVES ==================== */
+        /* ==================== 4. 3D CAROUSEL ARCHIVES (UPDATED) ==================== */
         
         .carousel-scene {
             width: 100%;
-            height: 480px; /* Reduced height to save space */
+            height: 480px; 
             position: relative;
             perspective: 1200px;
             display: flex;
@@ -378,30 +409,79 @@
 
         .carousel-item {
             position: absolute;
-            width: 260px; /* Reduced width from 320px */
+            width: 260px; 
             transform-style: preserve-3d;
             transition: box-shadow 0.3s, border-color 0.3s; 
             user-select: none;
             -webkit-user-drag: none;
         }
 
+        /* --- TECH CARD VISUAL ENHANCEMENT --- */
         .tech-card {
             background: var(--panel-bg); 
             border: 1px solid rgba(255,255,255,0.05); 
             position: relative;
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-            transition: border-color 0.3s, box-shadow 0.3s; 
+            transition: all 0.4s var(--ease-out-expo); 
         }
         
-        .carousel-item.active .tech-card {
+        /* HOVER EFFECTS: Frame Glow & Lift */
+        .carousel-item:hover .tech-card {
             border-color: var(--ice-cyan);
-            box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
+            box-shadow: 0 0 30px var(--ice-cyan), inset 0 0 20px rgba(42, 245, 255, 0.1);
+            transform: translateY(-5px);
+            z-index: 100; /* Ensure hover is on top */
         }
 
-        /* Reduced visual height */
-        .card-visual { height: 130px; position: relative; overflow: hidden; border-bottom: 2px solid var(--ice-cyan); pointer-events: none; }
-        .card-visual img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.4s; }
-        .carousel-item.active .card-visual img { filter: grayscale(0); }
+        /* Active state (via JS) */
+        .carousel-item.active .tech-card {
+            border-color: rgba(42, 245, 255, 0.6);
+            box-shadow: 0 0 15px rgba(42, 245, 255, 0.1);
+        }
+
+        /* Corner Brackets Effect on Hover */
+        .tech-card::before, .tech-card::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            border: 2px solid transparent; transition: 0.3s; pointer-events: none;
+        }
+        .carousel-item:hover .tech-card::before {
+            top: -5px; left: -5px; border-top-color: var(--ice-cyan); border-left-color: var(--ice-cyan);
+        }
+        .carousel-item:hover .tech-card::after {
+            bottom: -5px; right: -5px; border-bottom-color: var(--ice-cyan); border-right-color: var(--ice-cyan);
+        }
+
+        /* --- IMAGE HOVER SWAP LOGIC --- */
+        .card-visual { 
+            height: 130px; 
+            position: relative; /* Essential for overlay */
+            overflow: hidden; 
+            border-bottom: 2px solid var(--ice-cyan); 
+            pointer-events: none; 
+        }
+        
+        .card-visual img { 
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.4s;
+        }
+
+        /* Static Image (P3) */
+        .img-static {
+            opacity: 1; z-index: 1; filter: grayscale(1);
+        }
+        /* Hover Image (P1) */
+        .img-hover {
+            opacity: 0; z-index: 2; filter: grayscale(0);
+        }
+
+        /* Swap on Item Hover */
+        .carousel-item:hover .img-static { opacity: 0; transform: scale(1.1); }
+        .carousel-item:hover .img-hover  { opacity: 1; transform: scale(1.1); }
+        .carousel-item.active .img-static { filter: grayscale(0); } /* Make active static img colored too if not hovering */
+
+        /* --- END IMAGE SWAP --- */
         
         .card-body { padding: 15px; pointer-events: none; }
         .card-meta { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -512,6 +592,7 @@
             background: rgba(255,255,255,0.02); border-left: 3px solid rgba(255,255,255,0.1); 
             padding: 20px; display: flex; align-items: center; 
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;
+            cursor: pointer;
         }
         .intel-row:hover { background: rgba(42, 245, 255, 0.15); border-left: 4px solid var(--ice-cyan); box-shadow: 0 0 30px rgba(42, 245, 255, 0.1); transform: translateX(10px); }
         .intel-icon { 
@@ -571,6 +652,121 @@
         }
         .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
+        /* === EMBEDDED GAME STYLE (SMALLER + POPUP) === */
+        
+        /* 游戏容器缩小版 */
+        .game-container-full {
+            width: 100%;
+            max-width: 800px; /* 限制最大宽度 */
+            height: 400px;    /* 限制高度 */
+            margin: 0 auto;   /* 居中 */
+            background: #080a0c;
+            border: 1px solid var(--ice-cyan);
+            box-shadow: 0 0 30px rgba(42, 245, 255, 0.05) inset;
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+
+        canvas#miner-canvas { 
+            display: block; 
+            background-color: rgba(11, 15, 20, 0.8);
+            background-image: 
+                linear-gradient(rgba(42, 245, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(42, 245, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        
+        .game-ui-layer {
+            position: absolute; top: 15px; left: 20px; right: 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; 
+            color: var(--ice-cyan); pointer-events: none;
+            z-index: 5;
+            text-shadow: 0 0 10px var(--ice-cyan);
+        }
+
+        .manual-reset-btn {
+            pointer-events: all; /* crucial because ui-layer has pointer-events: none */
+            background: rgba(255, 42, 109, 0.15);
+            border: 1px solid var(--danger-red);
+            color: var(--danger-red);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .manual-reset-btn:hover { background: var(--danger-red); color: #0b0f14; box-shadow: 0 0 15px var(--danger-red); }
+
+        .game-cover {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+        .game-cover.hidden { opacity: 0; pointer-events: none; }
+        
+        .start-game-btn {
+            padding: 15px 40px;
+            background: transparent;
+            border: 2px solid var(--ice-cyan);
+            color: var(--ice-cyan);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem; letter-spacing: 3px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
+            transition: 0.3s;
+        }
+        .start-game-btn:hover { background: rgba(42, 245, 255, 0.1); color: #fff; box-shadow: 0 0 50px var(--ice-cyan); }
+
+        /* === GAME REWARD POPUP === */
+        .game-reward-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 20; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .game-reward-modal.active { opacity: 1; pointer-events: all; }
+        
+        .reward-card {
+            width: 300px; padding: 25px; border: 1px solid #444; background: #111;
+            text-align: center; position: relative;
+            transform: translateY(20px); transition: 0.4s var(--ease-out-expo);
+        }
+        .game-reward-modal.active .reward-card { transform: translateY(0); }
+
+        /* Styles for SMALL GREEN item */
+        .reward-card.popup-green { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,153,0.3); }
+        .reward-card.popup-green .reward-title { color: var(--neon-green); }
+        .reward-card.popup-green .visual-box { border: 1px dashed var(--neon-green); background: rgba(0,255,153,0.05); }
+        .reward-card.popup-green .visual-box::after { content: 'FRAGMENT'; color: var(--neon-green); opacity: 0.8; }
+
+        /* Styles for LARGE GOLD item */
+        .reward-card.popup-gold { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
+        .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
+        .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
+        .reward-card.popup-gold .visual-box::after { content: 'CORE DATA'; color: var(--neon-gold); font-weight: bold; }
+        
+        .visual-box {
+            width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
+            font-family: 'Rajdhani'; letter-spacing: 2px;
+        }
+        .reward-title { font-family: 'Rajdhani'; font-size: 1.5rem; margin-bottom: 5px; }
+        .reward-desc { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
+        .collect-btn {
+            background: transparent; border: 1px solid #666; color: #fff; padding: 8px 25px;
+            font-family: 'Rajdhani'; cursor: pointer; transition: 0.2s;
+        }
+        .collect-btn:hover { background: #fff; color: #000; }
+
         @media (max-width: 768px) {
             .hero-layout { flex-direction: column; text-align: center; transform: translateY(0); }
             .hero-left, .hero-right { width: 100%; flex: 0 0 100%; }
@@ -582,9 +778,10 @@
             :root { --cube-s: 20px; } 
             .modal-body { flex-direction: column; }
             .modal-img { height: 200px; }
-            /* Mobile Carousel Adjustment */
             .carousel-item { width: 220px; }
             .carousel-scene { height: 400px; }
+            .game-container-full { height: 350px; }
+            .start-game-btn { font-size: 1.2rem; padding: 15px 30px; }
         }
     </style>
 </head>
@@ -603,7 +800,7 @@
             </div>
             
             <div class="loading-text-group">
-                <div class="decode-text" data-final="NEURAL CONNECTING">INITIATING...</div>
+                <div class="decode-text" id="decode-text">INITIATING...</div>
                 <div class="loading-bar-fancy">
                     <div class="bar-fill"></div>
                 </div>
@@ -612,12 +809,8 @@
                     <span id="load-percent">00%</span>
                 </div>
             </div>
-
-            <button id="enter-btn" class="hidden">
-                <span class="deco-bracket">[</span> 
-                <span class="btn-text">ACCESS GRANTED</span> 
-                <span class="deco-bracket">]</span>
-            </button>
+            
+            <button id="enter-btn">ACCESS GRANTED</button>
         </div>
         <div class="vignette-overlay"></div>
     </div>
@@ -668,6 +861,7 @@
             <a href="#overview" class="nav-btn active">OVERVIEW</a>
             <a href="#archives" class="nav-btn">ARCHIVES</a>
             <a href="#analysis" class="nav-btn">ANALYSIS</a>
+            <a href="#simulation" class="nav-btn">SIMULATION</a>
             <a href="#connect" class="nav-btn">CONNECT</a>
         </nav>
         <div class="system-time" id="sys-time">00:00:00</div>
@@ -683,7 +877,7 @@
                     <h2 class="sub-header">ZLY // 逻辑编织者</h2>
                     <p class="hero-desc">
                         "世界由方块与逻辑堆砌而成。"<br>
-                        点击右侧核心，重构数据矩阵。<br>
+                        点击右侧核心，切换逻辑矩阵视图。<br>
                         在离散的像素中寻找连续的真理。
                     </p>
                     <div class="stats-row">
@@ -704,7 +898,7 @@
                         <div class="orbit-ring ring-outer"></div>
                         <div class="orbit-ring ring-inner"></div>
                         
-                        <div class="click-hint">>> CLICK CORE TO RECONSTRUCT <<</div>
+                        <div class="click-hint">>> CLICK CORE TO SWITCH PATTERN <<</div>
                     </div>
                 </div>
             </div>
@@ -728,7 +922,10 @@
                         data-link="https://www.bilibili.com/"
                         data-id="#0921">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="img/p2.png"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="img/p3.jpg" alt="Static View">
+                                <img class="img-hover" src="img/p1.png" alt="Action View">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">UNITY</span><span class="tag">MUSIC</span><span class="tag">SANDBOX</span></div>
                                 <h3>蹦！蹦！音乐世界</h3>
@@ -744,7 +941,10 @@
                         data-link="https://github.com/"
                         data-id="#0815">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/222/2AF5FF?text=ECONOMY"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/222/2AF5FF?text=DATA+GRID" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=SIMULATION+ACTIVE" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">EXCEL</span><span class="tag">SIM</span></div>
                                 <h3>Economy Sim</h3>
@@ -760,7 +960,10 @@
                         data-link="#"
                         data-id="#1110">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/333/2AF5FF?text=GRAVITY+DANCER"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/333/2AF5FF?text=CITY+VIEW" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/222/2AF5FF?text=ACTION+SHOT" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">UNITY</span><span class="tag">ACTION</span></div>
                                 <h3>Gravity Dancer</h3>
@@ -776,7 +979,10 @@
                         data-link="https://threejs.org/"
                         data-id="#0773">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/000/2AF5FF?text=NEURAL"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/000/2AF5FF?text=NODES" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=ACTIVATION" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">WEBGL</span><span class="tag">ART</span></div>
                                 <h3>Neural Visualizer</h3>
@@ -792,7 +998,10 @@
                         data-link="https://play.google.com/"
                         data-id="#0666">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=CYBER+PET"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=EGG+STATE" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/000/2AF5FF?text=EVOLVED" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">APP</span><span class="tag">LIVE2D</span></div>
                                 <h3>Cyber Pet: E01</h3>
@@ -851,12 +1060,46 @@
             </div>
         </section>
 
+        <section id="simulation" class="screen-section">
+            <div class="section-head">
+                <div class="deco-square"></div>
+                <h2>DATA MINING</h2>
+                <div class="deco-line"></div>
+                <span class="idx">04</span>
+            </div>
+            
+            <div class="game-container-full">
+                <div class="game-ui-layer">
+                    <span id="game-score">DATA: 0</span>
+                    <button class="manual-reset-btn" onclick="resetGameTotal()">[ RESET SYSTEM ]</button>
+                    <span id="game-status">IDLE</span>
+                </div>
+                <canvas id="miner-canvas"></canvas>
+                
+                <div class="game-cover" id="game-cover">
+                    <button class="start-game-btn" onclick="toggleGame()">
+                        [ INITIATE DATA MINING ]
+                    </button>
+                </div>
+
+                <div id="game-reward-modal" class="game-reward-modal">
+                    <div id="reward-card" class="reward-card">
+                        <div class="visual-box"></div>
+                        <h4 id="reward-title" class="reward-title">ITEM_NAME</h4>
+                        <p id="reward-desc" class="reward-desc">ITEM_DESC</p>
+                        <button class="collect-btn" onclick="collectReward()">COLLECT [ENTER]</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
         <section id="connect" class="screen-section">
             <div class="section-head">
                 <div class="deco-square"></div>
                 <h2>TERMINAL CONNECT</h2>
                 <div class="deco-line"></div>
-                <span class="idx">04</span>
+                <span class="idx">05</span>
             </div>
             <div class="connect-grid">
                 <div class="connect-card contact-info js-tilt">
@@ -904,16 +1147,13 @@
 
         // --- 0. AUDIO SYSTEM (音频系统) ---
         
-        // 1. 预加载外部音频文件
-        // 确保你的 sound 文件夹里有 click.mp3 和 in.mp3
         const clickSfx = new Audio('sound/click.mp3');
         clickSfx.volume = 0.6; 
-
-        const bootSfx = new Audio('sound/in.mp3'); // [新增] 加载进入音效
+        const bootSfx = new Audio('sound/in.mp3'); 
         bootSfx.volume = 0.8; 
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let isMuted = true; // 默认静音
+        let isMuted = true;
         
         const soundToggleBtn = document.getElementById('sound-toggle');
 
@@ -922,8 +1162,6 @@
             isMuted = !isMuted;
             soundToggleBtn.classList.toggle('active', !isMuted);
             soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
-            
-            // 开启声音时测试一下点击音
             if(!isMuted) playSound('click'); 
         };
 
@@ -931,138 +1169,164 @@
 
         const playSound = (type) => {
             if (isMuted) return;
-
-            // === A. 优先播放文件音效 (MP3) ===
-            
-            // 1. 点击音效
-            if (type === 'click') {
-                clickSfx.currentTime = 0; // 重置进度
-                clickSfx.play().catch(e => console.warn('Click sound error:', e));
-                return;
-            }
-
-            // 2. [修改点] 进入网页音效 (Boot)
-            if (type === 'boot') {
-                bootSfx.currentTime = 0;
-                bootSfx.play().catch(e => console.warn('Boot sound error:', e));
-                return;
-            }
-
-            // === B. 其他音效 (合成音 Fallback) ===
-            // 这里保留了 hover 和 type 的合成音，你也可以用同样的方法替换它们
+            // 简单的合成器音效，无需外部文件
             const now = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            if (type === 'hover') {
-                // 悬停音：高频短促
+            if (type === 'click' || type === 'hover') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
                 gain.gain.setValueAtTime(0.05, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                osc.start(now);
-                osc.stop(now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
             } else if (type === 'type') {
-                // 打字音：极短的方波
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1500, now);
                 gain.gain.setValueAtTime(0.02, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
-                osc.start(now);
-                osc.stop(now + 0.01);
-            } 
-            // 注意：原来的 'boot' 合成音代码删掉了，因为上面已经处理了 type === 'boot'
+                osc.start(now); osc.stop(now + 0.01);
+            } else if (type === 'coin') { // 抓到数据的音效
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'laser') { // 发射音效
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'boot') { // Access Granted Sound
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(110, now);
+                osc.frequency.linearRampToValueAtTime(880, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start(now); osc.stop(now + 1.5);
+            } else if (type === 'rare') { // Rare Item Sound
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1.0);
+                osc.start(now); osc.stop(now + 1.0);
+            }
         };
 
-        // 绑定音效到UI元素
         const bindSound = (selector, type, soundType) => {
             document.querySelectorAll(selector).forEach(el => {
                 el.addEventListener(type, () => playSound(soundType));
             });
         };
 
-        bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close', 'mouseenter', 'hover');
-        bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item', 'click', 'click');
+        bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close, .start-game-btn', 'mouseenter', 'hover');
+        bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .start-game-btn', 'click', 'click');
 
 
-        // --- 1. Loading Logic ---
+        // --- 1. Loading Logic (SMOOTHER TRANSITIONS) ---
         const loadingScreen = document.getElementById('loading-screen');
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
-        const enterBtn = document.getElementById('enter-btn');
-        const decodeText = document.querySelector('.decode-text');
-        const finalMsg = decodeText.getAttribute('data-final');
-
-        const textScramble = (element, finalString) => {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_#@';
-            let iterations = 0;
-            const interval = setInterval(() => {
-                element.innerText = finalString
-                    .split('')
-                    .map((letter, index) => {
-                        if(index < iterations) return finalString[index];
-                        return chars[Math.floor(Math.random() * chars.length)];
-                    })
-                    .join('');
-                
-                if (Math.random() > 0.5) playSound('type');
-
-                if(iterations >= finalString.length) clearInterval(interval);
-                iterations += 1/2; 
-            }, 40);
-        };
-
-        let progress = 0;
-        const loadInterval = setInterval(() => {
-            progress += Math.random() * 3; 
-            if (progress > 100) progress = 100;
-            loadingBar.style.width = `${progress}%`;
-            loadPercent.innerText = `${Math.floor(progress)}%`;
-            if (progress >= 100) {
-                clearInterval(loadInterval);
-                textScramble(decodeText, finalMsg);
-                setTimeout(() => {
-                    enterBtn.classList.remove('hidden');
-                    enterBtn.classList.add('show');
-                }, 500);
+        const decodeText = document.getElementById('decode-text');
+        
+        const enterSite = () => {
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(e => console.log("Autoplay blocked"));
             }
-        }, 40);
-
-        enterBtn.addEventListener('click', () => {
-            // 用户点击 [ACCESS GRANTED] 进入
-            if(audioCtx.state === 'suspended') audioCtx.resume();
             isMuted = false;
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
             
-            // 这里会触发我们刚才修改的 'boot' 逻辑，播放 in.mp3
-            playSound('boot');
-
-            loadingScreen.classList.add('fade-out');
             buildVoxels(); 
-        });
+        };
 
-        // --- 2. Voxel Builder ---
+        let progress = 0;
+        const loadInterval = setInterval(() => {
+            progress += Math.random() * 2.5; 
+            if (progress > 100) progress = 100;
+            loadingBar.style.width = `${progress}%`;
+            loadPercent.innerText = `${Math.floor(progress)}%`;
+            
+            if (progress >= 100) {
+                clearInterval(loadInterval);
+                
+                // STEP 1: 100% REACHED - Internal State Change
+                loadingBar.style.width = '100%';
+                loadingScreen.classList.add('success-state'); 
+
+                // STEP 2: Smooth Text Transition (Fade Out Old)
+                decodeText.style.opacity = 0;
+
+                setTimeout(() => {
+                    // STEP 3: Change Text & Add Glitch Effect (Fade In New)
+                    decodeText.innerText = "ACCESS GRANTED";
+                    decodeText.classList.add('glitch-text-active');
+                    decodeText.style.opacity = 1; 
+                    playSound('boot');
+                    
+                    // STEP 4: Hold for visual impact, then exit
+                    setTimeout(() => {
+                        loadingScreen.classList.add('granted-anim'); 
+                        setTimeout(() => {
+                            enterSite();
+                        }, 800); 
+                    }, 1200);
+
+                }, 400); 
+            }
+        }, 30); 
+
+
+        // --- 2. Voxel Builder (Updated with word cycling) ---
         const randomRange = (min, max) => Math.random() * (max - min) + min;
+
+        // Expanded Font Map for new words
+        const fontMap = {
+            Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
+            L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
+            Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]],
+            A: [[0,0,2,0,0],[0,1,0,1,0],[2,1,1,1,2],[1,0,0,0,1],[2,0,0,0,2]],
+            '+': [[0,0,1,0,0],[0,0,1,0,0],[1,1,2,1,1],[0,0,1,0,0],[0,0,1,0,0]],
+            '0': [[0,2,1,1,0],[1,0,0,0,1],[1,0,0,0,1],[1,0,0,0,1],[0,2,1,1,0]],
+            '1': [[0,0,2,0,0],[0,1,2,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,2,1,2,0]]
+        };
+
+        // Layout configurations for different words
+        const wordPatterns = [
+            // PATTERN 1: LY
+            [
+                { char: 'L', pos: { x: -50, y: 10, z: 20 }, rot: { x: 5, y: -20, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: 'Y', pos: { x: 50, y: -10, z: -20 }, rot: { x: -5, y: 20, z: 0 }, scale: 1.5, floatClass: 'float-mid', colorMod: 'bright' }
+            ],
+            // PATTERN 2: A+
+            [
+                { char: 'A', pos: { x: -60, y: 0, z: 0 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.6, floatClass: 'float-mid', colorMod: 'normal' },
+                { char: '+', pos: { x: 60, y: 40, z: 30 }, rot: { x: 0, y: 15, z: 5 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'bright' }
+            ],
+            // PATTERN 3: 01
+            [
+                { char: '0', pos: { x: -50, y: 0, z: -30 }, rot: { x: 5, y: -10, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' },
+                { char: '1', pos: { x: 50, y: 0, z: 30 }, rot: { x: -5, y: 10, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' }
+            ]
+        ];
+
+        let currentPatternIndex = 0;
 
         const buildVoxels = () => {
             const stage = document.getElementById('voxel-stage');
             if (!stage) return; 
             stage.innerHTML = '';
             const size = 34; 
-            const fontMap = {
-                Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
-                L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
-                Y: [[2,0,0,0,2],[1,1,0,1,1],[0,1,2,1,0],[0,0,1,0,0],[0,0,2,0,0]]
-            };
-            const layoutConfig = [
-                { char: 'Z', pos: { x: -80 + randomRange(-10,10), y: 60 + randomRange(-10,10), z: -120 }, rot: { x: randomRange(-5,5), y: -25 + randomRange(-5,5), z: 5 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
-                { char: 'L', pos: { x: 100 + randomRange(-10,10), y: 30 + randomRange(-10,10), z: -20 }, rot: { x: 5, y: 30 + randomRange(-5,5), z: 0 }, scale: 1.2, floatClass: 'float-mid', colorMod: 'normal' },
-                { char: 'Y', pos: { x: 0, y: -60 + randomRange(-10,10), z: 120 }, rot: { x: 5, y: 0 + randomRange(-5,5), z: 0 }, scale: 1.3, floatClass: 'float-fast', colorMod: 'bright' }
-            ];
+            
+            // Get current pattern config
+            const layoutConfig = wordPatterns[currentPatternIndex];
 
             const createSatellite = (parentCube) => {
                 const sat = document.createElement('div');
@@ -1095,6 +1359,8 @@
 
             layoutConfig.forEach(conf => {
                 const grid = fontMap[conf.char];
+                if (!grid) return;
+
                 const charContainer = document.createElement('div');
                 charContainer.className = `voxel-char ${conf.floatClass}`;
                 charContainer.style.setProperty('--px', `${conf.pos.x}px`);
@@ -1125,6 +1391,8 @@
         if (voxelContainer) {
             voxelContainer.addEventListener('click', () => {
                 playSound('click'); 
+                // Cycle through patterns
+                currentPatternIndex = (currentPatternIndex + 1) % wordPatterns.length;
                 buildVoxels();
             });
         }
@@ -1139,8 +1407,8 @@
 
             tiltCards.forEach(el => {
                 const rect = el.getBoundingClientRect();
-                const dx = (x - (rect.left + rect.width/2)) / 30;
-                const dy = (y - (rect.top + rect.height/2)) / 30;
+                const dx = (x - (rect.left + rect.width/2)) / 100; 
+                const dy = (y - (rect.top + rect.height/2)) / 100;
                 el.style.transform = `rotateX(${-dy}deg) rotateY(${dx}deg)`;
             });
 
@@ -1148,7 +1416,7 @@
                 const stage = holoModel.querySelector('.voxel-stage');
                 if(stage) {
                     const dx = (x - cx) / cx, dy = (y - cy) / cy;
-                    stage.style.transform = `translate3d(${dx * -20}px, ${dy * -20}px, 0) rotateX(${-10 + (-dy * 25)}deg) rotateY(${15 + (dx * 35)}deg)`;
+                    stage.style.transform = `translate3d(${dx * -10}px, ${dy * -10}px, 0) rotateX(${-10 + (-dy * 10)}deg) rotateY(${15 + (dx * 10)}deg)`;
                 }
             }
         });
@@ -1170,83 +1438,47 @@
 
         const updateCarousel = () => {
             currentRotation += (targetRotation - currentRotation) * 0.1;
-
             carouselItems.forEach((item, index) => {
                 const itemAngle = (index * anglePerItem) + currentRotation;
                 const radian = itemAngle * (Math.PI / 180);
-
                 const x = Math.sin(radian) * radius;
                 const z = Math.cos(radian) * radius;
-                
                 const depthRatio = (z + radius) / (2 * radius); 
                 const scale = 0.6 + (depthRatio * 0.4); 
                 const opacity = 0.3 + (depthRatio * 0.7); 
-
                 item.style.transform = `translate3d(${x}px, -30px, ${z}px) scale(${scale})`;
                 item.style.opacity = opacity;
                 item.style.zIndex = Math.floor(z); 
-
-                if (z > radius - 100) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
+                if (z > radius - 100) item.classList.add('active');
+                else item.classList.remove('active');
             });
-
             const normalizedRot = (currentRotation % 360 + 360) % 360; 
             const sliderPct = 100 - (normalizedRot / 360 * 100);
             sliderThumb.style.left = `${sliderPct}%`;
-
             requestAnimationFrame(updateCarousel);
         };
 
-        const onDragStart = (x) => {
-            isDragging = true;
-            startX = x;
-            lastX = x;
-            carouselScene.style.cursor = 'grabbing';
-        };
-
-        const onDragMove = (x) => {
-            if (!isDragging) return;
-            const delta = x - lastX;
-            targetRotation += delta * 0.5; 
-            lastX = x;
-        };
-
-        const onDragEnd = () => {
-            isDragging = false;
-            carouselScene.style.cursor = 'grab';
-        };
+        const onDragStart = (x) => { isDragging = true; startX = x; lastX = x; carouselScene.style.cursor = 'grabbing'; };
+        const onDragMove = (x) => { if (!isDragging) return; const delta = x - lastX; targetRotation += delta * 0.5; lastX = x; };
+        const onDragEnd = () => { isDragging = false; carouselScene.style.cursor = 'grab'; };
 
         carouselScene.addEventListener('mousedown', e => onDragStart(e.clientX));
         window.addEventListener('mousemove', e => onDragMove(e.clientX));
         window.addEventListener('mouseup', onDragEnd);
-
         carouselScene.addEventListener('touchstart', e => onDragStart(e.touches[0].clientX));
         window.addEventListener('touchmove', e => onDragMove(e.touches[0].clientX));
         window.addEventListener('touchend', onDragEnd);
 
         const sliderTrack = document.querySelector('.slider-track');
         let sliderDragging = false;
-
-        sliderTrack.addEventListener('mousedown', (e) => {
-            sliderDragging = true;
-            updateFromSlider(e);
-        });
-        window.addEventListener('mousemove', (e) => {
-            if(sliderDragging) updateFromSlider(e);
-        });
+        sliderTrack.addEventListener('mousedown', (e) => { sliderDragging = true; updateFromSlider(e); });
+        window.addEventListener('mousemove', (e) => { if(sliderDragging) updateFromSlider(e); });
         window.addEventListener('mouseup', () => sliderDragging = false);
-
         const updateFromSlider = (e) => {
             const rect = sliderTrack.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            x = Math.max(0, Math.min(x, rect.width));
-            const delta = (e.movementX || 0) * -1;
-            targetRotation += delta;
+            let x = e.clientX - rect.left; x = Math.max(0, Math.min(x, rect.width));
+            const delta = (e.movementX || 0) * -1; targetRotation += delta;
         }
-
         updateCarousel();
 
 
@@ -1265,30 +1497,15 @@
             mDesc.innerText = dataset.desc || 'No description available.';
             mId.innerText = dataset.id || 'N/A';
             mLink.href = dataset.link || '#';
-            if (dataset.img) {
-                mImg.src = dataset.img;
-                mImg.parentElement.style.display = 'block'; 
-            } else {
-                mImg.parentElement.style.display = 'none'; 
-            }
+            if (dataset.img) { mImg.src = dataset.img; mImg.parentElement.style.display = 'block'; } 
+            else { mImg.parentElement.style.display = 'none'; }
             modal.classList.add('active');
         };
 
         let clickStartX = 0;
         document.querySelectorAll('.carousel-item').forEach(item => {
             item.addEventListener('mousedown', e => clickStartX = e.clientX);
-            item.addEventListener('click', e => {
-                if (Math.abs(e.clientX - clickStartX) < 5) {
-                    openModal(item.dataset);
-                }
-            });
-            item.addEventListener('touchstart', e => clickStartX = e.touches[0].clientX);
-            item.addEventListener('touchend', e => {
-                const endX = e.changedTouches[0].clientX;
-                if (Math.abs(endX - clickStartX) < 5) {
-                    openModal(item.dataset);
-                }
-            });
+            item.addEventListener('click', e => { if (Math.abs(e.clientX - clickStartX) < 5) openModal(item.dataset); });
         });
 
         document.querySelectorAll('.download-btn').forEach(btn => {
@@ -1300,15 +1517,292 @@
         });
 
         modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
-        modal.addEventListener('click', (e) => {
-            if(e.target === modal) {
-                modal.classList.remove('active');
-                playSound('click'); 
+        modal.addEventListener('click', (e) => { if(e.target === modal) { modal.classList.remove('active'); playSound('click'); } });
+
+
+        // --- 6. CYBER-MINER GAME LOGIC (WITH REWARD POPUP) ---
+        const gameCanvas = document.getElementById('miner-canvas');
+        const gCtx = gameCanvas.getContext('2d');
+        const scoreDisplay = document.getElementById('game-score');
+        const statusDisplay = document.getElementById('game-status');
+        const gameCover = document.getElementById('game-cover');
+        const rewardModal = document.getElementById('game-reward-modal');
+        const rewardCard = document.getElementById('reward-card');
+        const rewardTitle = document.getElementById('reward-title');
+        const rewardDesc = document.getElementById('reward-desc');
+        
+        let gameLoopId;
+        let gameActive = false;
+        let gamePaused = false; // New Pause State
+        let score = 0;
+        let canvasW, canvasH;
+
+        // Resize
+        const resizeGame = () => {
+            const rect = gameCanvas.parentElement.getBoundingClientRect();
+            gameCanvas.width = rect.width;
+            gameCanvas.height = rect.height;
+            canvasW = rect.width;
+            canvasH = rect.height;
+        };
+        window.addEventListener('resize', resizeGame);
+        setTimeout(resizeGame, 500); 
+
+        // Parameters
+        const hook = {
+            x: 400, y: 20, length: 50, angle: 0, 
+            da: 2, 
+            state: 0, // 0:Swing, 1:Shoot, 2:Pull, 3:Paused(Reward)
+            speed: 15, 
+            targetObj: null
+        };
+        let minerals = [];
+
+        window.toggleGame = () => {
+            if(gameActive) return; 
+            playSound('click');
+            gameCover.classList.add('hidden');
+            gameActive = true;
+            statusDisplay.innerText = "STATUS: SCANNING...";
+            resizeGame(); 
+            hook.x = canvasW / 2;
+            if(minerals.length === 0) initLevel();
+            loopGame();
+        };
+
+        window.resetGameTotal = () => {
+            score = 0;
+            playSound('click');
+            scoreDisplay.innerText = `DATA: ${score}`;
+            statusDisplay.innerText = "SYSTEM REBOOT...";
+            initLevel();
+        }
+
+        const initLevel = () => {
+            minerals = [];
+            // Type 0: Small (Green) -> Value 10
+            // Type 1: Large (Gold) -> Value 30 (BIG REWARD)
+            for(let i=0; i<5; i++) {
+                minerals.push({
+                    x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
+                    r: randomRange(15, 25), val: 10, type: 0, rotation: Math.random() * Math.PI
+                });
+            }
+            for(let i=0; i<3; i++) {
+                minerals.push({
+                    x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
+                    r: randomRange(30, 45), val: 30, type: 1, rotation: Math.random() * Math.PI
+                });
+            }
+            hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
+            // Note: We do NOT reset score here automatically anymore
+        };
+
+        // Input
+        gameCanvas.addEventListener('mousedown', () => {
+            if(gameActive && !gamePaused && hook.state === 0) {
+                hook.state = 1;
+                playSound('laser');
             }
         });
+        // Key bind for collecting reward
+        window.addEventListener('keydown', (e) => {
+            if(gamePaused && e.key === 'Enter') collectReward();
+        });
+
+        const loopGame = () => {
+            if(!gameActive) return;
+            if(!gamePaused) updateGame(); // Only update logic if not paused
+            drawGame(); // Always draw
+            gameLoopId = requestAnimationFrame(loopGame);
+        };
+
+        const updateGame = () => {
+            // State Machine
+            if(hook.state === 0) { // Swing
+                hook.angle += hook.da;
+                if(hook.angle > 75 || hook.angle < -75) hook.da *= -1;
+            } 
+            else if (hook.state === 1) { // Shoot
+                const rad = hook.angle * Math.PI / 180;
+                hook.length += hook.speed;
+                // Bounds
+                let hx = hook.x + Math.sin(rad) * hook.length;
+                let hy = hook.y + Math.cos(rad) * hook.length;
+                if(hx < 0 || hx > canvasW || hy > canvasH) {
+                    hook.state = 2; // Pull back empty
+                }
+                // Collision
+                for(let i=0; i<minerals.length; i++) {
+                    let m = minerals[i];
+                    if(!m.caught && Math.hypot(m.x - hx, m.y - hy) < m.r) {
+                        hook.state = 2;
+                        hook.targetObj = m;
+                        m.caught = true;
+                        playSound('hover'); 
+                        break;
+                    }
+                }
+            } 
+            else if (hook.state === 2) { // Pull
+                let pullSpeed = hook.speed;
+                if(hook.targetObj) {
+                    if(hook.targetObj.type === 0) pullSpeed = 12; // Light (Fast)
+                    else pullSpeed = 5; // Heavy (Slow)
+                }
+                hook.length -= pullSpeed;
+                
+                // HAUL COMPLETE
+                if(hook.length <= 50) {
+                    hook.length = 50;
+                    
+                    if(hook.targetObj) {
+                        // TRIGGER REWARD POPUP instead of instant collect
+                        showRewardPopup(hook.targetObj);
+                    } else {
+                        hook.state = 0; // Empty haul, reset
+                    }
+                }
+            }
+        };
+
+        // --- POPUP LOGIC ---
+        const showRewardPopup = (obj) => {
+            gamePaused = true; // Pause game loop logic
+            rewardModal.classList.add('active');
+            
+            // Remove old classes
+            rewardCard.classList.remove('popup-green', 'popup-gold');
+            
+            if (obj.type === 0) {
+                // SMALL (GREEN) -> LOW VALUE
+                rewardCard.classList.add('popup-green');
+                rewardTitle.innerText = "DATA FRAGMENT";
+                rewardDesc.innerText = "Small packet of routine data. Knowledge +10.";
+                playSound('coin');
+            } else {
+                // LARGE (GOLD) -> HIGH VALUE
+                rewardCard.classList.add('popup-gold');
+                rewardTitle.innerText = "DEEP ARCHIVE";
+                rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30.";
+                playSound('rare');
+            }
+        };
+
+        window.collectReward = () => {
+            if (!gamePaused) return;
+            
+            // Logic to collect
+            if(hook.targetObj) {
+                score += hook.targetObj.val;
+                // NO LIMIT ON SCORE NOW
+                scoreDisplay.innerText = `DATA: ${score}`;
+                minerals = minerals.filter(m => m !== hook.targetObj);
+                hook.targetObj = null;
+            }
+            
+            // Reset UI
+            rewardModal.classList.remove('active');
+            gamePaused = false;
+            hook.state = 0; // Reset hook
+            playSound('click');
+
+            // Check Clear -> Respawn but keep score
+            if(minerals.length === 0) {
+                statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
+                setTimeout(initLevel, 1500);
+            }
+        };
 
 
-        // --- 6. Particles & Canvas ---
+        const drawGame = () => {
+            gCtx.clearRect(0, 0, canvasW, canvasH);
+            
+            // Draw Minerals
+            minerals.forEach(m => {
+                if(m.caught && hook.targetObj !== m) return; 
+                
+                let renderX = m.x;
+                let renderY = m.y;
+                
+                if(hook.targetObj === m) {
+                    const rad = hook.angle * Math.PI / 180;
+                    renderX = hook.x + Math.sin(rad) * hook.length;
+                    renderY = hook.y + Math.cos(rad) * hook.length;
+                }
+
+                gCtx.save();
+                gCtx.translate(renderX, renderY);
+                gCtx.rotate(m.rotation + (gameActive ? performance.now() * 0.001 : 0)); 
+
+                if (m.type === 0) {
+                    // SMALL (GREEN)
+                    gCtx.shadowBlur = 15;
+                    gCtx.shadowColor = "#00FF99";
+                    gCtx.fillStyle = "rgba(0, 255, 153, 0.2)"; 
+                    gCtx.strokeStyle = "#00FF99"; 
+                    gCtx.lineWidth = 2;
+                    gCtx.strokeRect(-m.r/2, -m.r/2, m.r, m.r);
+                    gCtx.fillRect(-m.r/2, -m.r/2, m.r, m.r);
+                    // Core
+                    gCtx.fillStyle = "#FFF";
+                    gCtx.fillRect(-4, -4, 8, 8);
+                } else {
+                    // LARGE (GOLD)
+                    gCtx.shadowBlur = 20;
+                    gCtx.shadowColor = "#FFD700";
+                    gCtx.fillStyle = "rgba(255, 215, 0, 0.2)";
+                    gCtx.strokeStyle = "#FFD700";
+                    gCtx.beginPath();
+                    gCtx.moveTo(m.r, 0);
+                    gCtx.lineTo(m.r * 0.5, m.r * 0.8);
+                    gCtx.lineTo(-m.r * 0.8, m.r * 0.5);
+                    gCtx.lineTo(-m.r, -m.r * 0.5);
+                    gCtx.lineTo(m.r * 0.5, -m.r);
+                    gCtx.closePath();
+                    gCtx.fill();
+                    gCtx.stroke();
+                }
+                gCtx.restore();
+            });
+
+            // Draw Laser
+            const rad = hook.angle * Math.PI / 180;
+            const endX = hook.x + Math.sin(rad) * hook.length;
+            const endY = hook.y + Math.cos(rad) * hook.length;
+
+            gCtx.save();
+            gCtx.beginPath();
+            gCtx.moveTo(hook.x, hook.y);
+            gCtx.lineTo(endX, endY);
+            gCtx.strokeStyle = "rgba(42, 245, 255, 0.8)";
+            gCtx.lineWidth = 2;
+            gCtx.setLineDash([5, 5]); 
+            gCtx.stroke();
+            gCtx.restore();
+
+            // Draw Probe
+            gCtx.save();
+            gCtx.translate(endX, endY);
+            gCtx.rotate(-rad);
+            gCtx.shadowBlur = 10;
+            gCtx.shadowColor = "#fff";
+            gCtx.fillStyle = "#fff";
+            gCtx.beginPath();
+            gCtx.moveTo(0, 0);
+            gCtx.lineTo(-5, -10);
+            gCtx.lineTo(5, -10);
+            gCtx.closePath();
+            gCtx.fill();
+            gCtx.restore();
+            
+            // Base
+            gCtx.fillStyle = "#222";
+            gCtx.fillRect(hook.x - 10, 0, 20, 20);
+        };
+
+
+        // --- 7. Particles & Canvas ---
         const canvas = document.getElementById('ice-particles');
         const ctx = canvas.getContext('2d');
         const frostLayer = document.getElementById('frost-layer');
@@ -1323,6 +1817,7 @@
         });
 
         document.addEventListener('mousedown', (e) => {
+            if(gameActive && e.target === gameCanvas) return; // Prevent interference
             const ripple = document.createElement('div');
             ripple.classList.add('click-ripple');
             ripple.style.left = `${e.clientX}px`; ripple.style.top = `${e.clientY}px`;
@@ -1371,7 +1866,7 @@
         window.addEventListener('resize', () => { resize(); initParticles(); });
         resize(); initParticles(); animateParticles();
 
-        // --- 7. Scroll Spy & Time ---
+        // --- 8. Scroll Spy & Time ---
         const sections = document.querySelectorAll('.screen-section');
         const navLinks = document.querySelectorAll('.nav-btn');
         const observer = new IntersectionObserver((entries) => {
@@ -1394,8 +1889,4 @@
     });
     </script>
 </body>
-
 </html>
-
-
-
