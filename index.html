@@ -381,7 +381,7 @@
         @keyframes spin-ccw { from { transform: translate(-50%, -50%) translateZ(-50px) rotate(360deg); } to { transform: translate(-50%, -50%) translateZ(-50px) rotate(0deg); } }
 
 
-        /* ==================== 4. 3D CAROUSEL ARCHIVES ==================== */
+        /* ==================== 4. 3D CAROUSEL ARCHIVES (UPDATED) ==================== */
         
         .carousel-scene {
             width: 100%;
@@ -416,23 +416,72 @@
             -webkit-user-drag: none;
         }
 
+        /* --- TECH CARD VISUAL ENHANCEMENT --- */
         .tech-card {
             background: var(--panel-bg); 
             border: 1px solid rgba(255,255,255,0.05); 
             position: relative;
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-            transition: border-color 0.3s, box-shadow 0.3s; 
+            transition: all 0.4s var(--ease-out-expo); 
         }
         
-        .carousel-item.active .tech-card {
+        /* HOVER EFFECTS: Frame Glow & Lift */
+        .carousel-item:hover .tech-card {
             border-color: var(--ice-cyan);
-            box-shadow: 0 0 30px rgba(42, 245, 255, 0.1);
+            box-shadow: 0 0 30px var(--ice-cyan), inset 0 0 20px rgba(42, 245, 255, 0.1);
+            transform: translateY(-5px);
+            z-index: 100; /* Ensure hover is on top */
         }
 
-        /* Reduced visual height */
-        .card-visual { height: 130px; position: relative; overflow: hidden; border-bottom: 2px solid var(--ice-cyan); pointer-events: none; }
-        .card-visual img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.4s; }
-        .carousel-item.active .card-visual img { filter: grayscale(0); }
+        /* Active state (via JS) */
+        .carousel-item.active .tech-card {
+            border-color: rgba(42, 245, 255, 0.6);
+            box-shadow: 0 0 15px rgba(42, 245, 255, 0.1);
+        }
+
+        /* Corner Brackets Effect on Hover */
+        .tech-card::before, .tech-card::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            border: 2px solid transparent; transition: 0.3s; pointer-events: none;
+        }
+        .carousel-item:hover .tech-card::before {
+            top: -5px; left: -5px; border-top-color: var(--ice-cyan); border-left-color: var(--ice-cyan);
+        }
+        .carousel-item:hover .tech-card::after {
+            bottom: -5px; right: -5px; border-bottom-color: var(--ice-cyan); border-right-color: var(--ice-cyan);
+        }
+
+        /* --- IMAGE HOVER SWAP LOGIC --- */
+        .card-visual { 
+            height: 130px; 
+            position: relative; /* Essential for overlay */
+            overflow: hidden; 
+            border-bottom: 2px solid var(--ice-cyan); 
+            pointer-events: none; 
+        }
+        
+        .card-visual img { 
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.4s;
+        }
+
+        /* Static Image (P3) */
+        .img-static {
+            opacity: 1; z-index: 1; filter: grayscale(1);
+        }
+        /* Hover Image (P1) */
+        .img-hover {
+            opacity: 0; z-index: 2; filter: grayscale(0);
+        }
+
+        /* Swap on Item Hover */
+        .carousel-item:hover .img-static { opacity: 0; transform: scale(1.1); }
+        .carousel-item:hover .img-hover  { opacity: 1; transform: scale(1.1); }
+        .carousel-item.active .img-static { filter: grayscale(0); } /* Make active static img colored too if not hovering */
+
+        /* --- END IMAGE SWAP --- */
         
         .card-body { padding: 15px; pointer-events: none; }
         .card-meta { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -873,7 +922,10 @@
                         data-link="https://www.bilibili.com/"
                         data-id="#0921">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="img/p2.png"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="img/p3.jpg" alt="Static View">
+                                <img class="img-hover" src="img/p1.png" alt="Action View">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">UNITY</span><span class="tag">MUSIC</span><span class="tag">SANDBOX</span></div>
                                 <h3>蹦！蹦！音乐世界</h3>
@@ -889,7 +941,10 @@
                         data-link="https://github.com/"
                         data-id="#0815">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/222/2AF5FF?text=ECONOMY"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/222/2AF5FF?text=DATA+GRID" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=SIMULATION+ACTIVE" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">EXCEL</span><span class="tag">SIM</span></div>
                                 <h3>Economy Sim</h3>
@@ -905,7 +960,10 @@
                         data-link="#"
                         data-id="#1110">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/333/2AF5FF?text=GRAVITY+DANCER"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/333/2AF5FF?text=CITY+VIEW" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/222/2AF5FF?text=ACTION+SHOT" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">UNITY</span><span class="tag">ACTION</span></div>
                                 <h3>Gravity Dancer</h3>
@@ -921,7 +979,10 @@
                         data-link="https://threejs.org/"
                         data-id="#0773">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/000/2AF5FF?text=NEURAL"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/000/2AF5FF?text=NODES" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=ACTIVATION" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">WEBGL</span><span class="tag">ART</span></div>
                                 <h3>Neural Visualizer</h3>
@@ -937,7 +998,10 @@
                         data-link="https://play.google.com/"
                         data-id="#0666">
                         <article class="tech-card">
-                            <div class="card-visual"><img src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=CYBER+PET"></div>
+                            <div class="card-visual">
+                                <img class="img-static" src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=EGG+STATE" alt="Static">
+                                <img class="img-hover" src="https://via.placeholder.com/600x300/000/2AF5FF?text=EVOLVED" alt="Hover">
+                            </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">APP</span><span class="tag">LIVE2D</span></div>
                                 <h3>Cyber Pet: E01</h3>
