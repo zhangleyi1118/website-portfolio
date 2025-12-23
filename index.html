@@ -633,12 +633,27 @@
         
         .game-ui-layer {
             position: absolute; top: 15px; left: 20px; right: 20px; 
-            display: flex; justify-content: space-between;
+            display: flex; justify-content: space-between; align-items: center;
             font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; 
             color: var(--ice-cyan); pointer-events: none;
             z-index: 5;
             text-shadow: 0 0 10px var(--ice-cyan);
         }
+
+        .manual-reset-btn {
+            pointer-events: all; /* crucial because ui-layer has pointer-events: none */
+            background: rgba(255, 42, 109, 0.15);
+            border: 1px solid var(--danger-red);
+            color: var(--danger-red);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .manual-reset-btn:hover { background: var(--danger-red); color: #0b0f14; box-shadow: 0 0 15px var(--danger-red); }
 
         .game-cover {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -991,7 +1006,8 @@
             
             <div class="game-container-full">
                 <div class="game-ui-layer">
-                    <span id="game-score">DATA COLLECTED: 0%</span>
+                    <span id="game-score">DATA: 0</span>
+                    <button class="manual-reset-btn" onclick="resetGameTotal()">[ RESET SYSTEM ]</button>
                     <span id="game-status">IDLE</span>
                 </div>
                 <canvas id="miner-canvas"></canvas>
@@ -1486,9 +1502,17 @@
             statusDisplay.innerText = "STATUS: SCANNING...";
             resizeGame(); 
             hook.x = canvasW / 2;
-            initLevel();
+            if(minerals.length === 0) initLevel();
             loopGame();
         };
+
+        window.resetGameTotal = () => {
+            score = 0;
+            playSound('click');
+            scoreDisplay.innerText = `DATA: ${score}`;
+            statusDisplay.innerText = "SYSTEM REBOOT...";
+            initLevel();
+        }
 
         const initLevel = () => {
             minerals = [];
@@ -1507,7 +1531,7 @@
                 });
             }
             hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
-            scoreDisplay.innerText = `DATA COLLECTED: ${score}%`;
+            // Note: We do NOT reset score here automatically anymore
         };
 
         // Input
@@ -1590,13 +1614,13 @@
                 // SMALL (GREEN) -> LOW VALUE
                 rewardCard.classList.add('popup-green');
                 rewardTitle.innerText = "DATA FRAGMENT";
-                rewardDesc.innerText = "Small packet of routine data. Knowledge +10%.";
+                rewardDesc.innerText = "Small packet of routine data. Knowledge +10.";
                 playSound('coin');
             } else {
                 // LARGE (GOLD) -> HIGH VALUE
                 rewardCard.classList.add('popup-gold');
                 rewardTitle.innerText = "DEEP ARCHIVE";
-                rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30%.";
+                rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30.";
                 playSound('rare');
             }
         };
@@ -1607,8 +1631,8 @@
             // Logic to collect
             if(hook.targetObj) {
                 score += hook.targetObj.val;
-                if(score > 100) score = 100;
-                scoreDisplay.innerText = `DATA COLLECTED: ${score}%`;
+                // NO LIMIT ON SCORE NOW
+                scoreDisplay.innerText = `DATA: ${score}`;
                 minerals = minerals.filter(m => m !== hook.targetObj);
                 hook.targetObj = null;
             }
@@ -1619,10 +1643,10 @@
             hook.state = 0; // Reset hook
             playSound('click');
 
-            // Check Clear
-            if(minerals.length === 0 || score >= 100) {
-                statusDisplay.innerText = "PROFILE SYNCHRONIZED COMPLETE.";
-                setTimeout(initLevel, 2000);
+            // Check Clear -> Respawn but keep score
+            if(minerals.length === 0) {
+                statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
+                setTimeout(initLevel, 1500);
             }
         };
 
