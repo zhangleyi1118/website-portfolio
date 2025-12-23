@@ -683,13 +683,13 @@
         .reward-card.popup-green { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,153,0.3); }
         .reward-card.popup-green .reward-title { color: var(--neon-green); }
         .reward-card.popup-green .visual-box { border: 1px dashed var(--neon-green); background: rgba(0,255,153,0.05); }
-        .reward-card.popup-green .visual-box::after { content: 'INSIGHT'; color: var(--neon-green); opacity: 0.8; }
+        .reward-card.popup-green .visual-box::after { content: 'FRAGMENT'; color: var(--neon-green); opacity: 0.8; }
 
         /* Styles for LARGE GOLD item */
         .reward-card.popup-gold { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
         .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
         .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
-        .reward-card.popup-gold .visual-box::after { content: 'BASIC DATA'; color: var(--neon-gold); font-weight: bold; }
+        .reward-card.popup-gold .visual-box::after { content: 'CORE DATA'; color: var(--neon-gold); font-weight: bold; }
         
         .visual-box {
             width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
@@ -1492,18 +1492,18 @@
 
         const initLevel = () => {
             minerals = [];
-            // Type 0: Secure Key (Insight/Fast/Green)
-            // Type 1: Raw Data (Background/Heavy/Gold)
+            // Type 0: Small (Green) -> Value 10
+            // Type 1: Large (Gold) -> Value 30 (BIG REWARD)
             for(let i=0; i<5; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
-                    r: randomRange(15, 25), val: 15, type: 0, rotation: Math.random() * Math.PI
+                    r: randomRange(15, 25), val: 10, type: 0, rotation: Math.random() * Math.PI
                 });
             }
             for(let i=0; i<3; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
-                    r: randomRange(30, 45), val: 5, type: 1, rotation: Math.random() * Math.PI
+                    r: randomRange(30, 45), val: 30, type: 1, rotation: Math.random() * Math.PI
                 });
             }
             hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
@@ -1587,16 +1587,16 @@
             rewardCard.classList.remove('popup-green', 'popup-gold');
             
             if (obj.type === 0) {
-                // SMALL (GREEN) -> HIGH VALUE
+                // SMALL (GREEN) -> LOW VALUE
                 rewardCard.classList.add('popup-green');
-                rewardTitle.innerText = "CORE MEMORY";
-                rewardDesc.innerText = "Unlocked specific personality trait. Data density: HIGH.";
+                rewardTitle.innerText = "DATA FRAGMENT";
+                rewardDesc.innerText = "Small packet of routine data. Knowledge +10%.";
                 playSound('coin');
             } else {
-                // LARGE (GOLD) -> MEDIUM VALUE
+                // LARGE (GOLD) -> HIGH VALUE
                 rewardCard.classList.add('popup-gold');
-                rewardTitle.innerText = "RAW DATA BLOCK";
-                rewardDesc.innerText = "General background information processed. Data density: MED.";
+                rewardTitle.innerText = "DEEP ARCHIVE";
+                rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30%.";
                 playSound('rare');
             }
         };
