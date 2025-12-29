@@ -126,7 +126,24 @@
         .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear, background 0.3s; }
         .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
 
-        #enter-btn { display: none; } 
+        #enter-btn { 
+            display: none; 
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid var(--ice-cyan);
+            color: var(--ice-cyan);
+            padding: 10px 30px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        #enter-btn:hover {
+            background: var(--ice-cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--ice-cyan);
+        }
 
         /* ==================== 2. GLOBAL VISUALS ==================== */
 
@@ -746,19 +763,31 @@
         /* Styles for SMALL GREEN item */
         .reward-card.popup-green { border-color: var(--neon-green); box-shadow: 0 0 20px rgba(0,255,153,0.3); }
         .reward-card.popup-green .reward-title { color: var(--neon-green); }
-        .reward-card.popup-green .visual-box { border: 1px dashed var(--neon-green); background: rgba(0,255,153,0.05); }
-        .reward-card.popup-green .visual-box::after { content: 'FRAGMENT'; color: var(--neon-green); opacity: 0.8; }
-
+        
         /* Styles for LARGE GOLD item */
         .reward-card.popup-gold { border-color: var(--neon-gold); box-shadow: 0 0 40px rgba(255, 215, 0, 0.4); }
         .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
-        .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
-        .reward-card.popup-gold .visual-box::after { content: 'CORE DATA'; color: var(--neon-gold); font-weight: bold; }
-
+        
+        /* Updated Visual Box for Text */
         .visual-box {
             width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
-            font-family: 'Rajdhani'; letter-spacing: 2px;
+            font-family: 'Rajdhani', sans-serif; letter-spacing: 2px; font-weight: 700; font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px;
+            color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
+
+        /* Green Box Variant */
+        .reward-card.popup-green .visual-box { 
+            border: 2px solid var(--neon-green); background: rgba(0,255,153,0.1); color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0,255,153,0.2) inset;
+        }
+
+        /* Gold Box Variant */
+        .reward-card.popup-gold .visual-box { 
+            border: 2px solid var(--neon-gold); background: rgba(255,215,0,0.15); color: var(--neon-gold);
+            box-shadow: 0 0 30px rgba(255,215,0,0.3) inset;
+        }
+
         .reward-title { font-family: 'Rajdhani'; font-size: 1.5rem; margin-bottom: 5px; }
         .reward-desc { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
         .collect-btn {
@@ -1127,7 +1156,7 @@
     document.addEventListener('DOMContentLoaded', () => {
 
         // =========================================================
-        // --- 0. AUDIO SYSTEM (全局音频系统 - 纯代码生成 + BGM) ---
+        // --- 0. AUDIO SYSTEM (全局音频系统) ---
         // =========================================================
 
         // [配置区域] 请在这里配置你的背景音乐路径
@@ -1136,7 +1165,7 @@
         // 初始化 BGM 对象
         const bgmAudio = new Audio(BGM_PATH);
         bgmAudio.loop = true;   // 设置循环播放
-        bgmAudio.volume = 0.1;  // 设置背景音乐音量 (0.0 - 1.0)
+        bgmAudio.volume = 0.4;  // 设置背景音乐音量 (0.0 - 1.0)
 
         // Web Audio API 上下文 (用于生成系统音效)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -1168,7 +1197,6 @@
         soundToggleBtn.addEventListener('click', toggleSound);
 
         // --- 核心音效合成器 (逻辑音效) ---
-        // 不需要任何外部文件，使用数学生成波形
         const playSound = (type) => {
             if (isMuted) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -1181,82 +1209,58 @@
             gain.connect(audioCtx.destination);
 
             if (type === 'hover') {
-                // 悬停：极短的高频“滴”，类似数据流过
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, t);
                 osc.frequency.exponentialRampToValueAtTime(1200, t + 0.03);
-
-                gain.gain.setValueAtTime(0.05, t); // 音量很小
+                gain.gain.setValueAtTime(0.05, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
-
                 osc.start(t);
                 osc.stop(t + 0.03);
-
             } else if (type === 'click') {
-                // 修改版：更沉稳、不尖锐的“机械按键”声
-                // 之前的版本是Triangle Wave(三角波)且频率较高(600Hz)，所以比较尖锐
-                osc.type = 'sine'; // 改用正弦波，声音最圆润
-                osc.frequency.setValueAtTime(400, t); // 起始频率降低 (原600)
-                osc.frequency.exponentialRampToValueAtTime(100, t + 0.1); // 快速下降产生打击感
-
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, t);
+                osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
                 gain.gain.setValueAtTime(0.15, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-
                 osc.start(t);
                 osc.stop(t + 0.1);
-
             } else if (type === 'laser') { 
-                // 发射/动作：锯齿波，甚至有点粗糙
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(880, t);
                 osc.frequency.exponentialRampToValueAtTime(110, t + 0.2);
-
                 gain.gain.setValueAtTime(0.08, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-
                 osc.start(t);
                 osc.stop(t + 0.2);
-
             } else if (type === 'coin') { 
-                // 获取普通物品：双音色（这里模拟快速琶音）
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1200, t);
                 osc.frequency.setValueAtTime(1800, t + 0.05);
-
                 gain.gain.setValueAtTime(0.05, t);
                 gain.gain.linearRampToValueAtTime(0, t + 0.1);
-
                 osc.start(t);
                 osc.stop(t + 0.1);
-
             } else if (type === 'rare') { 
-                // 获取稀有物品：悦耳的正弦波长音
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(440, t);
-                osc.frequency.linearRampToValueAtTime(880, t + 0.1); // 上滑
+                osc.frequency.linearRampToValueAtTime(880, t + 0.1);
                 osc.frequency.setValueAtTime(880, t + 0.1);
-                osc.frequency.linearRampToValueAtTime(1320, t + 0.2); // 再上滑
-
+                osc.frequency.linearRampToValueAtTime(1320, t + 0.2);
                 gain.gain.setValueAtTime(0.1, t);
                 gain.gain.linearRampToValueAtTime(0.2, t + 0.2);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-
                 osc.start(t);
                 osc.stop(t + 0.8);
             }
         };
 
-        // 绑定音效到 DOM 元素
+        // 绑定音效
         const bindSound = (selector, eventType, soundType) => {
             document.querySelectorAll(selector).forEach(el => {
                 el.addEventListener(eventType, () => playSound(soundType));
             });
         };
-
-        // 绑定悬停音效 (Hover)
         bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close, .start-game-btn', 'mouseenter', 'hover');
-
-        // 绑定点击音效 (Click)
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .start-game-btn', 'click', 'click');
 
 
@@ -1267,6 +1271,7 @@
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
         const decodeText = document.getElementById('decode-text');
+        const enterBtn = document.getElementById('enter-btn');
 
         // 进入站点核心函数
         const enterSite = () => {
@@ -1274,29 +1279,25 @@
             if(audioCtx.state === 'suspended') {
                 audioCtx.resume().catch(e => console.log("Audio Context Autoplay restricted"));
             }
-
             // 2. 解除静音标志
             isMuted = false;
-
             // 3. 更新右下角UI状态
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
-
-            // 4. *** 播放背景音乐 ***
-            // 注意：如果浏览器策略极其严格，可能第一次需要用户点击页面任意位置才能真正出声
-            bgmAudio.play().catch(error => {
-                console.log("BGM自动播放被拦截，等待用户第一次点击...");
-                // 添加一个一次性的点击监听器作为兜底
-                const oneTimePlay = () => {
-                    bgmAudio.play();
-                    window.removeEventListener('click', oneTimePlay);
-                };
-                window.addEventListener('click', oneTimePlay);
-            });
-
-            // 5. 初始化 3D 字体
+            // 4. 初始化 3D 字体
             buildVoxels(); 
         };
+
+        // 按钮点击事件（解决自动播放限制）
+        enterBtn.addEventListener('click', () => {
+            playSound('click'); 
+            bgmAudio.play().catch(e => console.log("BGM error:", e));
+
+            loadingScreen.classList.add('granted-anim');
+            setTimeout(() => {
+                enterSite();
+            }, 800);
+        });
 
         // 模拟加载进度
         let progress = 0;
@@ -1308,30 +1309,15 @@
 
             if (progress >= 100) {
                 clearInterval(loadInterval);
-
-                // 加载完成动画序列
-                loadingBar.style.width = '100%';
                 loadingScreen.classList.add('success-state'); 
-
                 decodeText.style.opacity = 0;
 
                 setTimeout(() => {
-                    decodeText.innerText = "ACCESS GRANTED";
+                    decodeText.innerText = "SYSTEM READY";
                     decodeText.classList.add('glitch-text-active');
-                    decodeText.style.opacity = 1; 
-
-                    // 在这里播放一个微小的音效提示加载完成
-                    playSound('click');
-
-                    setTimeout(() => {
-                        // 界面淡出
-                        loadingScreen.classList.add('granted-anim'); 
-                        setTimeout(() => {
-                            // *** 正式进入系统，开始播放音乐 ***
-                            enterSite();
-                        }, 800); 
-                    }, 1200);
-
+                    decodeText.style.opacity = 1;
+                    enterBtn.style.display = 'block'; 
+                    playSound('coin'); 
                 }, 400); 
             }
         }, 30); 
@@ -1340,7 +1326,6 @@
         // =========================================================
         // --- 2. VOXEL BUILDER (3D 字体构建) ---
         // =========================================================
-        // Expanded Font Map for new words
         const fontMap = {
             Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
             L: [[2,0,0,0,0],[1,0,0,0,0],[1,0,0,0,0],[1,0,0,0,1],[2,1,1,1,2]],
@@ -1390,10 +1375,8 @@
             layoutConfig.forEach(conf => {
                 const grid = fontMap[conf.char];
                 if (!grid) return;
-
                 const charContainer = document.createElement('div');
                 charContainer.className = `voxel-char ${conf.floatClass}`;
-                // Simplified setting of transforms for brevity
                 charContainer.style.transform = `translate3d(${conf.pos.x}px, ${conf.pos.y}px, ${conf.pos.z}px) rotateX(${conf.rot.x}deg) rotateY(${conf.rot.y}deg) scale(${conf.scale})`;
 
                 grid.forEach((row, rowIndex) => {
@@ -1547,7 +1530,7 @@
 
 
         // =========================================================
-        // --- 6. CYBER-MINER GAME LOGIC ---
+        // --- 6. CYBER-MINER GAME LOGIC (UPDATED WITH TEXT REWARDS) ---
         // =========================================================
         const gameCanvas = document.getElementById('miner-canvas');
         const gCtx = gameCanvas.getContext('2d');
@@ -1564,6 +1547,26 @@
         let gamePaused = false; 
         let score = 0;
         let canvasW, canvasH;
+
+        // --- 数据池定义 ---
+        // 普通物品池 (绿色) - 技能、工具、日常
+        const commonDataPool = [
+            { tag: "SKILL", title: "Unity Dev", desc: "熟练使用 C# 进行游戏逻辑与交互开发。" },
+            { tag: "SKILL", title: "System Design", desc: "专注于游戏系统架构与数值平衡设计。" },
+            { tag: "TOOL",  title: "Figma & XD", desc: "使用专业工具构建直观且美观的 UI/UX。" },
+            { tag: "TECH",  title: "GAME", desc: "爱玩各种游戏。" },
+            { tag: "TECH",  title: "Art", desc: "手绘、板绘皆会。" },
+            { tag: "HOBBY", title: "Web Novels", desc: "阅读《诡秘之主》等作品寻找叙事灵感。" }
+        ];
+
+        // 稀有物品池 (金色) - 身份、核心项目、深度兴趣
+        const rareDataPool = [
+            { tag: "IDENTITY", title: "INTJ-A", desc: "建筑师人格。独立、逻辑缜密，追求完美系统。" },
+            { tag: "CAREER",   title: "Intern", desc: "实习经历。" },
+            { tag: "PROJECT",  title: "Divine Heir", desc: "正在开发代号 Divine Heir 的 AI 养成模拟游戏。" },
+            { tag: "ANALYSIS", title: "Volcano Princess", desc: "深度拆解《火山的女儿》数值循环系统。" },
+            { tag: "ART",      title: "Duane Hanson", desc: "着迷于超写实雕塑带来的真实与虚幻的冲击感。" }
+        ];
 
         const resizeGame = () => {
             const rect = gameCanvas.parentElement.getBoundingClientRect();
@@ -1607,12 +1610,14 @@
 
         const initLevel = () => {
             minerals = [];
+            // 普通矿石 (绿色)
             for(let i=0; i<5; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
                     r: randomRange(15, 25), val: 10, type: 0, rotation: Math.random() * Math.PI
                 });
             }
+            // 稀有矿石 (金色)
             for(let i=0; i<3; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
@@ -1682,22 +1687,33 @@
             }
         };
 
+        // --- UPDATED POPUP LOGIC ---
         const showRewardPopup = (obj) => {
             gamePaused = true; 
             rewardModal.classList.add('active');
+            
+            // Clear old classes
             rewardCard.classList.remove('popup-green', 'popup-gold');
+            
+            let data;
+            const visualBox = rewardCard.querySelector('.visual-box');
 
             if (obj.type === 0) {
+                // Common Item (Green Pool)
                 rewardCard.classList.add('popup-green');
-                rewardTitle.innerText = "DATA FRAGMENT";
-                rewardDesc.innerText = "Small packet of routine data. Knowledge +10.";
                 playSound('coin');
+                data = commonDataPool[Math.floor(Math.random() * commonDataPool.length)];
             } else {
+                // Rare Item (Gold Pool)
                 rewardCard.classList.add('popup-gold');
-                rewardTitle.innerText = "DEEP ARCHIVE";
-                rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30.";
                 playSound('rare');
+                data = rareDataPool[Math.floor(Math.random() * rareDataPool.length)];
             }
+
+            // Fill Content
+            visualBox.innerHTML = data.tag; // e.g. "SKILL" or "IDENTITY"
+            rewardTitle.innerText = data.title;
+            rewardDesc.innerText = data.desc;
         };
 
         window.collectReward = () => {
@@ -1886,7 +1902,3 @@
     </script>
 </body>
 </html>
-
-
-
-
