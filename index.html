@@ -1145,108 +1145,194 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        // --- 0. AUDIO SYSTEM (音频系统) ---
+        // =========================================================
+        // --- 0. AUDIO SYSTEM (全局音频系统 - 纯代码生成 + BGM) ---
+        // =========================================================
         
-        const clickSfx = new Audio('sound/click.mp3');
-        clickSfx.volume = 0.6; 
-        const bootSfx = new Audio('sound/in.mp3'); 
-        bootSfx.volume = 0.8; 
+        // [配置区域] 请在这里配置你的背景音乐路径
+        const BGM_PATH = 'bgm.mp3'; 
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let isMuted = true;
+        // 初始化 BGM 对象
+        const bgmAudio = new Audio(BGM_PATH);
+        bgmAudio.loop = true;   // 设置循环播放
+        bgmAudio.volume = 0.4;  // 设置背景音乐音量 (0.0 - 1.0)
+
+        // Web Audio API 上下文 (用于生成系统音效)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
         
+        let isMuted = true; // 默认静音，直到进入系统
         const soundToggleBtn = document.getElementById('sound-toggle');
 
+        // 开关声音逻辑
         const toggleSound = () => {
             if(audioCtx.state === 'suspended') audioCtx.resume();
+            
             isMuted = !isMuted;
-            soundToggleBtn.classList.toggle('active', !isMuted);
-            soundToggleBtn.innerHTML = isMuted ? '<span class="icon">🔇</span> AUDIO: OFF' : '<span class="icon">🔊</span> AUDIO: ON';
-            if(!isMuted) playSound('click'); 
+            
+            if (isMuted) {
+                // 静音状态
+                bgmAudio.pause();
+                soundToggleBtn.classList.remove('active');
+                soundToggleBtn.innerHTML = '<span class="icon">🔇</span> AUDIO: OFF';
+            } else {
+                // 开启状态
+                bgmAudio.play().catch(e => console.log("等待用户交互后播放BGM"));
+                soundToggleBtn.classList.add('active');
+                soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
+                playSound('click'); 
+            }
         };
 
         soundToggleBtn.addEventListener('click', toggleSound);
 
+        // --- 核心音效合成器 (逻辑音效) ---
+        // 不需要任何外部文件，使用数学生成波形
         const playSound = (type) => {
             if (isMuted) return;
-            // 简单的合成器音效，无需外部文件
-            const now = audioCtx.currentTime;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
-            if (type === 'click' || type === 'hover') {
+            if (type === 'hover') {
+                // 悬停：极短的高频“滴”，类似数据流过
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                osc.start(now); osc.stop(now + 0.05);
-            } else if (type === 'type') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1500, now);
-                gain.gain.setValueAtTime(0.02, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
-                osc.start(now); osc.stop(now + 0.01);
-            } else if (type === 'coin') { // 抓到数据的音效
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.linearRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'laser') { // 发射音效
+                osc.frequency.setValueAtTime(800, t);
+                osc.frequency.exponentialRampToValueAtTime(1200, t + 0.03);
+                
+                gain.gain.setValueAtTime(0.05, t); // 音量很小
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+                
+                osc.start(t);
+                osc.stop(t + 0.03);
+
+            } else if (type === 'click') {
+                // 点击：清脆的确认音，类似机械键盘或UI确认
+                osc.type = 'triangle'; // 三角波更有质感
+                osc.frequency.setValueAtTime(600, t);
+                osc.frequency.exponentialRampToValueAtTime(300, t + 0.1);
+                
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                
+                osc.start(t);
+                osc.stop(t + 0.1);
+
+            } else if (type === 'boot') {
+                // 启动：经典的系统启动爬升音
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, t);
+                osc.frequency.linearRampToValueAtTime(800, t + 0.8); // 频率爬升
+                
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.3, t + 0.1);
+                gain.gain.linearRampToValueAtTime(0, t + 1.5); // 长尾音
+                
+                osc.start(t);
+                osc.stop(t + 1.5);
+
+            } else if (type === 'laser') { 
+                // 发射/动作：锯齿波，甚至有点粗糙
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(200, now + 0.2);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'boot') { // Access Granted Sound
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(110, now);
-                osc.frequency.linearRampToValueAtTime(880, now + 0.5);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 1.5);
-                osc.start(now); osc.stop(now + 1.5);
-            } else if (type === 'rare') { // Rare Item Sound
+                osc.frequency.setValueAtTime(880, t);
+                osc.frequency.exponentialRampToValueAtTime(110, t + 0.2);
+                
+                gain.gain.setValueAtTime(0.08, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+                
+                osc.start(t);
+                osc.stop(t + 0.2);
+
+            } else if (type === 'coin') { 
+                // 获取普通物品：双音色（这里模拟快速琶音）
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, t);
+                osc.frequency.setValueAtTime(1800, t + 0.05);
+                
+                gain.gain.setValueAtTime(0.05, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                
+                osc.start(t);
+                osc.stop(t + 0.1);
+
+            } else if (type === 'rare') { 
+                // 获取稀有物品：悦耳的正弦波长音
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.linearRampToValueAtTime(0, now + 1.0);
-                osc.start(now); osc.stop(now + 1.0);
+                osc.frequency.setValueAtTime(440, t);
+                osc.frequency.linearRampToValueAtTime(880, t + 0.1); // 上滑
+                osc.frequency.setValueAtTime(880, t + 0.1);
+                osc.frequency.linearRampToValueAtTime(1320, t + 0.2); // 再上滑
+                
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.linearRampToValueAtTime(0.2, t + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+                
+                osc.start(t);
+                osc.stop(t + 0.8);
             }
         };
 
-        const bindSound = (selector, type, soundType) => {
+        // 绑定音效到 DOM 元素
+        const bindSound = (selector, eventType, soundType) => {
             document.querySelectorAll(selector).forEach(el => {
-                el.addEventListener(type, () => playSound(soundType));
+                el.addEventListener(eventType, () => playSound(soundType));
             });
         };
 
+        // 绑定悬停音效 (Hover)
         bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close, .start-game-btn', 'mouseenter', 'hover');
+        
+        // 绑定点击音效 (Click)
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .start-game-btn', 'click', 'click');
 
 
-        // --- 1. Loading Logic (SMOOTHER TRANSITIONS) ---
+        // =========================================================
+        // --- 1. LOADING SCREEN & ENTRY (加载与进入逻辑) ---
+        // =========================================================
         const loadingScreen = document.getElementById('loading-screen');
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
         const decodeText = document.getElementById('decode-text');
         
+        // 进入站点核心函数
         const enterSite = () => {
+            // 1. 尝试激活音频上下文
             if(audioCtx.state === 'suspended') {
-                audioCtx.resume().catch(e => console.log("Autoplay blocked"));
+                audioCtx.resume().catch(e => console.log("Audio Context Autoplay restricted"));
             }
+            
+            // 2. 解除静音标志
             isMuted = false;
+            
+            // 3. 更新右下角UI状态
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
             
+            // 4. *** 播放背景音乐 ***
+            // 注意：如果浏览器策略极其严格，可能第一次需要用户点击页面任意位置才能真正出声
+            bgmAudio.play().catch(error => {
+                console.log("BGM自动播放被拦截，等待用户第一次点击...");
+                // 添加一个一次性的点击监听器作为兜底
+                const oneTimePlay = () => {
+                    bgmAudio.play();
+                    window.removeEventListener('click', oneTimePlay);
+                };
+                window.addEventListener('click', oneTimePlay);
+            });
+
+            // 5. 播放系统启动音效
+            playSound('boot');
+
+            // 6. 初始化 3D 字体
             buildVoxels(); 
         };
 
+        // 模拟加载进度
         let progress = 0;
         const loadInterval = setInterval(() => {
             progress += Math.random() * 2.5; 
@@ -1257,24 +1343,25 @@
             if (progress >= 100) {
                 clearInterval(loadInterval);
                 
-                // STEP 1: 100% REACHED - Internal State Change
+                // 加载完成动画序列
                 loadingBar.style.width = '100%';
                 loadingScreen.classList.add('success-state'); 
 
-                // STEP 2: Smooth Text Transition (Fade Out Old)
                 decodeText.style.opacity = 0;
 
                 setTimeout(() => {
-                    // STEP 3: Change Text & Add Glitch Effect (Fade In New)
                     decodeText.innerText = "ACCESS GRANTED";
                     decodeText.classList.add('glitch-text-active');
                     decodeText.style.opacity = 1; 
-                    playSound('boot');
                     
-                    // STEP 4: Hold for visual impact, then exit
+                    // 在这里播放一个微小的音效提示加载完成
+                    playSound('click');
+                    
                     setTimeout(() => {
+                        // 界面淡出
                         loadingScreen.classList.add('granted-anim'); 
                         setTimeout(() => {
+                            // *** 正式进入系统，开始播放音乐 ***
                             enterSite();
                         }, 800); 
                     }, 1200);
@@ -1284,9 +1371,9 @@
         }, 30); 
 
 
-        // --- 2. Voxel Builder (Updated with word cycling) ---
-        const randomRange = (min, max) => Math.random() * (max - min) + min;
-
+        // =========================================================
+        // --- 2. VOXEL BUILDER (3D 字体构建) ---
+        // =========================================================
         // Expanded Font Map for new words
         const fontMap = {
             Z: [[2,1,1,1,2],[0,0,0,1,0],[0,0,2,0,0],[0,1,0,0,0],[2,1,1,1,2]],
@@ -1298,23 +1385,10 @@
             '1': [[0,0,2,0,0],[0,1,2,0,0],[0,0,1,0,0],[0,0,1,0,0],[0,2,1,2,0]]
         };
 
-        // Layout configurations for different words
         const wordPatterns = [
-            // PATTERN 1: LY
-            [
-                { char: 'L', pos: { x: -50, y: 10, z: 20 }, rot: { x: 5, y: -20, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' },
-                { char: 'Y', pos: { x: 50, y: -10, z: -20 }, rot: { x: -5, y: 20, z: 0 }, scale: 1.5, floatClass: 'float-mid', colorMod: 'bright' }
-            ],
-            // PATTERN 2: A+
-            [
-                { char: 'A', pos: { x: -60, y: 0, z: 0 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.6, floatClass: 'float-mid', colorMod: 'normal' },
-                { char: '+', pos: { x: 60, y: 40, z: 30 }, rot: { x: 0, y: 15, z: 5 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'bright' }
-            ],
-            // PATTERN 3: 01
-            [
-                { char: '0', pos: { x: -50, y: 0, z: -30 }, rot: { x: 5, y: -10, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' },
-                { char: '1', pos: { x: 50, y: 0, z: 30 }, rot: { x: -5, y: 10, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' }
-            ]
+            [{ char: 'L', pos: { x: -50, y: 10, z: 20 }, rot: { x: 5, y: -20, z: 0 }, scale: 1.5, floatClass: 'float-slow', colorMod: 'dark' }, { char: 'Y', pos: { x: 50, y: -10, z: -20 }, rot: { x: -5, y: 20, z: 0 }, scale: 1.5, floatClass: 'float-mid', colorMod: 'bright' }],
+            [{ char: 'A', pos: { x: -60, y: 0, z: 0 }, rot: { x: 0, y: -15, z: 0 }, scale: 1.6, floatClass: 'float-mid', colorMod: 'normal' }, { char: '+', pos: { x: 60, y: 40, z: 30 }, rot: { x: 0, y: 15, z: 5 }, scale: 1.2, floatClass: 'float-fast', colorMod: 'bright' }],
+            [{ char: '0', pos: { x: -50, y: 0, z: -30 }, rot: { x: 5, y: -10, z: 0 }, scale: 1.4, floatClass: 'float-slow', colorMod: 'dark' }, { char: '1', pos: { x: 50, y: 0, z: 30 }, rot: { x: -5, y: 10, z: 0 }, scale: 1.4, floatClass: 'float-mid', colorMod: 'bright' }]
         ];
 
         let currentPatternIndex = 0;
@@ -1324,16 +1398,7 @@
             if (!stage) return; 
             stage.innerHTML = '';
             const size = 34; 
-            
-            // Get current pattern config
             const layoutConfig = wordPatterns[currentPatternIndex];
-
-            const createSatellite = (parentCube) => {
-                const sat = document.createElement('div');
-                sat.className = 'satellite';
-                sat.style.animationDelay = `${Math.random() * 2}s`;
-                parentCube.appendChild(sat);
-            };
 
             const createCube = (x, y, z, type, delay, colorMod) => {
                 const cube = document.createElement('div');
@@ -1353,7 +1418,6 @@
                     face.className = `face ${faceCls}`;
                     cube.appendChild(face);
                 });
-                if (Math.random() > 0.9) createSatellite(cube);
                 return cube;
             };
 
@@ -1363,12 +1427,7 @@
 
                 const charContainer = document.createElement('div');
                 charContainer.className = `voxel-char ${conf.floatClass}`;
-                charContainer.style.setProperty('--px', `${conf.pos.x}px`);
-                charContainer.style.setProperty('--py', `${conf.pos.y}px`);
-                charContainer.style.setProperty('--pz', `${conf.pos.z}px`);
-                charContainer.style.setProperty('--rx', `${conf.rot.x}deg`);
-                charContainer.style.setProperty('--ry', `${conf.rot.y}deg`);
-                charContainer.style.setProperty('--s', `${conf.scale}`);
+                // Simplified setting of transforms for brevity
                 charContainer.style.transform = `translate3d(${conf.pos.x}px, ${conf.pos.y}px, ${conf.pos.z}px) rotateX(${conf.rot.x}deg) rotateY(${conf.rot.y}deg) scale(${conf.scale})`;
 
                 grid.forEach((row, rowIndex) => {
@@ -1391,7 +1450,6 @@
         if (voxelContainer) {
             voxelContainer.addEventListener('click', () => {
                 playSound('click'); 
-                // Cycle through patterns
                 currentPatternIndex = (currentPatternIndex + 1) % wordPatterns.length;
                 buildVoxels();
             });
@@ -1421,7 +1479,9 @@
             }
         });
 
-        // ==================== 4. CAROUSEL LOGIC ====================
+        // =========================================================
+        // --- 4. CAROUSEL LOGIC ---
+        // =========================================================
         const carouselItems = document.querySelectorAll('.carousel-item');
         const carouselScene = document.getElementById('carousel-scene');
         const sliderThumb = document.getElementById('slider-thumb');
@@ -1520,7 +1580,9 @@
         modal.addEventListener('click', (e) => { if(e.target === modal) { modal.classList.remove('active'); playSound('click'); } });
 
 
-        // --- 6. CYBER-MINER GAME LOGIC (WITH REWARD POPUP) ---
+        // =========================================================
+        // --- 6. CYBER-MINER GAME LOGIC ---
+        // =========================================================
         const gameCanvas = document.getElementById('miner-canvas');
         const gCtx = gameCanvas.getContext('2d');
         const scoreDisplay = document.getElementById('game-score');
@@ -1533,11 +1595,10 @@
         
         let gameLoopId;
         let gameActive = false;
-        let gamePaused = false; // New Pause State
+        let gamePaused = false; 
         let score = 0;
         let canvasW, canvasH;
 
-        // Resize
         const resizeGame = () => {
             const rect = gameCanvas.parentElement.getBoundingClientRect();
             gameCanvas.width = rect.width;
@@ -1548,7 +1609,6 @@
         window.addEventListener('resize', resizeGame);
         setTimeout(resizeGame, 500); 
 
-        // Parameters
         const hook = {
             x: 400, y: 20, length: 50, angle: 0, 
             da: 2, 
@@ -1557,6 +1617,7 @@
             targetObj: null
         };
         let minerals = [];
+        const randomRange = (min, max) => Math.random() * (max - min) + min;
 
         window.toggleGame = () => {
             if(gameActive) return; 
@@ -1580,8 +1641,6 @@
 
         const initLevel = () => {
             minerals = [];
-            // Type 0: Small (Green) -> Value 10
-            // Type 1: Large (Gold) -> Value 30 (BIG REWARD)
             for(let i=0; i<5; i++) {
                 minerals.push({
                     x: randomRange(50, canvasW-50), y: randomRange(100, canvasH-50),
@@ -1595,30 +1654,26 @@
                 });
             }
             hook.state = 0; hook.length = 50; hook.angle = 0; hook.targetObj = null;
-            // Note: We do NOT reset score here automatically anymore
         };
 
-        // Input
         gameCanvas.addEventListener('mousedown', () => {
             if(gameActive && !gamePaused && hook.state === 0) {
                 hook.state = 1;
                 playSound('laser');
             }
         });
-        // Key bind for collecting reward
         window.addEventListener('keydown', (e) => {
             if(gamePaused && e.key === 'Enter') collectReward();
         });
 
         const loopGame = () => {
             if(!gameActive) return;
-            if(!gamePaused) updateGame(); // Only update logic if not paused
-            drawGame(); // Always draw
+            if(!gamePaused) updateGame(); 
+            drawGame(); 
             gameLoopId = requestAnimationFrame(loopGame);
         };
 
         const updateGame = () => {
-            // State Machine
             if(hook.state === 0) { // Swing
                 hook.angle += hook.da;
                 if(hook.angle > 75 || hook.angle < -75) hook.da *= -1;
@@ -1626,13 +1681,11 @@
             else if (hook.state === 1) { // Shoot
                 const rad = hook.angle * Math.PI / 180;
                 hook.length += hook.speed;
-                // Bounds
                 let hx = hook.x + Math.sin(rad) * hook.length;
                 let hy = hook.y + Math.cos(rad) * hook.length;
                 if(hx < 0 || hx > canvasW || hy > canvasH) {
-                    hook.state = 2; // Pull back empty
+                    hook.state = 2; 
                 }
-                // Collision
                 for(let i=0; i<minerals.length; i++) {
                     let m = minerals[i];
                     if(!m.caught && Math.hypot(m.x - hx, m.y - hy) < m.r) {
@@ -1647,41 +1700,33 @@
             else if (hook.state === 2) { // Pull
                 let pullSpeed = hook.speed;
                 if(hook.targetObj) {
-                    if(hook.targetObj.type === 0) pullSpeed = 12; // Light (Fast)
-                    else pullSpeed = 5; // Heavy (Slow)
+                    if(hook.targetObj.type === 0) pullSpeed = 12; 
+                    else pullSpeed = 5; 
                 }
                 hook.length -= pullSpeed;
                 
-                // HAUL COMPLETE
                 if(hook.length <= 50) {
                     hook.length = 50;
-                    
                     if(hook.targetObj) {
-                        // TRIGGER REWARD POPUP instead of instant collect
                         showRewardPopup(hook.targetObj);
                     } else {
-                        hook.state = 0; // Empty haul, reset
+                        hook.state = 0; 
                     }
                 }
             }
         };
 
-        // --- POPUP LOGIC ---
         const showRewardPopup = (obj) => {
-            gamePaused = true; // Pause game loop logic
+            gamePaused = true; 
             rewardModal.classList.add('active');
-            
-            // Remove old classes
             rewardCard.classList.remove('popup-green', 'popup-gold');
             
             if (obj.type === 0) {
-                // SMALL (GREEN) -> LOW VALUE
                 rewardCard.classList.add('popup-green');
                 rewardTitle.innerText = "DATA FRAGMENT";
                 rewardDesc.innerText = "Small packet of routine data. Knowledge +10.";
                 playSound('coin');
             } else {
-                // LARGE (GOLD) -> HIGH VALUE
                 rewardCard.classList.add('popup-gold');
                 rewardTitle.innerText = "DEEP ARCHIVE";
                 rewardDesc.innerText = "Massive core memory block retrieved. Knowledge +30.";
@@ -1691,34 +1736,25 @@
 
         window.collectReward = () => {
             if (!gamePaused) return;
-            
-            // Logic to collect
             if(hook.targetObj) {
                 score += hook.targetObj.val;
-                // NO LIMIT ON SCORE NOW
                 scoreDisplay.innerText = `DATA: ${score}`;
                 minerals = minerals.filter(m => m !== hook.targetObj);
                 hook.targetObj = null;
             }
-            
-            // Reset UI
             rewardModal.classList.remove('active');
             gamePaused = false;
-            hook.state = 0; // Reset hook
+            hook.state = 0; 
             playSound('click');
 
-            // Check Clear -> Respawn but keep score
             if(minerals.length === 0) {
                 statusDisplay.innerText = "SECTOR CLEARED. REFRESHING...";
                 setTimeout(initLevel, 1500);
             }
         };
 
-
         const drawGame = () => {
             gCtx.clearRect(0, 0, canvasW, canvasH);
-            
-            // Draw Minerals
             minerals.forEach(m => {
                 if(m.caught && hook.targetObj !== m) return; 
                 
@@ -1736,7 +1772,6 @@
                 gCtx.rotate(m.rotation + (gameActive ? performance.now() * 0.001 : 0)); 
 
                 if (m.type === 0) {
-                    // SMALL (GREEN)
                     gCtx.shadowBlur = 15;
                     gCtx.shadowColor = "#00FF99";
                     gCtx.fillStyle = "rgba(0, 255, 153, 0.2)"; 
@@ -1744,11 +1779,9 @@
                     gCtx.lineWidth = 2;
                     gCtx.strokeRect(-m.r/2, -m.r/2, m.r, m.r);
                     gCtx.fillRect(-m.r/2, -m.r/2, m.r, m.r);
-                    // Core
                     gCtx.fillStyle = "#FFF";
                     gCtx.fillRect(-4, -4, 8, 8);
                 } else {
-                    // LARGE (GOLD)
                     gCtx.shadowBlur = 20;
                     gCtx.shadowColor = "#FFD700";
                     gCtx.fillStyle = "rgba(255, 215, 0, 0.2)";
@@ -1766,7 +1799,6 @@
                 gCtx.restore();
             });
 
-            // Draw Laser
             const rad = hook.angle * Math.PI / 180;
             const endX = hook.x + Math.sin(rad) * hook.length;
             const endY = hook.y + Math.cos(rad) * hook.length;
@@ -1781,7 +1813,6 @@
             gCtx.stroke();
             gCtx.restore();
 
-            // Draw Probe
             gCtx.save();
             gCtx.translate(endX, endY);
             gCtx.rotate(-rad);
@@ -1796,7 +1827,6 @@
             gCtx.fill();
             gCtx.restore();
             
-            // Base
             gCtx.fillStyle = "#222";
             gCtx.fillRect(hook.x - 10, 0, 20, 20);
         };
@@ -1817,7 +1847,7 @@
         });
 
         document.addEventListener('mousedown', (e) => {
-            if(gameActive && e.target === gameCanvas) return; // Prevent interference
+            if(gameActive && e.target === gameCanvas) return; 
             const ripple = document.createElement('div');
             ripple.classList.add('click-ripple');
             ripple.style.left = `${e.clientX}px`; ripple.style.top = `${e.clientY}px`;
@@ -1890,4 +1920,5 @@
     </script>
 </body>
 </html>
+
 
