@@ -952,7 +952,7 @@
                             </div>
                         </article>
                        </div>
-                   
+                    
                     <div class="carousel-item" 
                         data-title="Slime" 
                         data-desc="类空洞骑士的一款像素探险游戏。" 
@@ -1193,14 +1193,15 @@
                 osc.stop(t + 0.03);
 
             } else if (type === 'click') {
-                // 点击：清脆的确认音，类似机械键盘或UI确认
-                osc.type = 'triangle'; // 三角波更有质感
-                osc.frequency.setValueAtTime(600, t);
-                osc.frequency.exponentialRampToValueAtTime(300, t + 0.1);
-                
-                gain.gain.setValueAtTime(0.1, t);
+                // 修改版：更沉稳、不尖锐的“机械按键”声
+                // 之前的版本是Triangle Wave(三角波)且频率较高(600Hz)，所以比较尖锐
+                osc.type = 'sine'; // 改用正弦波，声音最圆润
+                osc.frequency.setValueAtTime(400, t); // 起始频率降低 (原600)
+                osc.frequency.exponentialRampToValueAtTime(100, t + 0.1); // 快速下降产生打击感
+
+                gain.gain.setValueAtTime(0.15, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-                
+
                 osc.start(t);
                 osc.stop(t + 0.1);
 
@@ -1885,5 +1886,3 @@
     </script>
 </body>
 </html>
-
-
