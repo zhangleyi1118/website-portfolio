@@ -6,7 +6,7 @@
     <title>LEYIZHANG // GAME DESIGNER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --void-bg: #0b0f14; 
@@ -125,7 +125,7 @@
         .loading-bar-fancy { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 5px; position: relative; overflow: hidden; }
         .bar-fill { height: 100%; width: 0%; background: var(--ice-cyan); box-shadow: 0 0 10px var(--ice-cyan); transition: width 0.1s linear, background 0.3s; }
         .status-row { display: flex; justify-content: space-between; font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; color: var(--text-sub); }
-        
+
         #enter-btn { display: none; } 
 
         /* ==================== 2. GLOBAL VISUALS ==================== */
@@ -148,7 +148,7 @@
             backdrop-filter: blur(10px) brightness(1.1);
             -webkit-backdrop-filter: blur(10px) brightness(1.1);
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)' opacity='0.05'/%3E%3C/svg%3E");
-            
+
             --mask-size: 250px;
             mask-image: radial-gradient(
                 circle var(--mask-size) at var(--mouse-x, 50%) var(--mouse-y, 50%), 
@@ -382,7 +382,7 @@
 
 
         /* ==================== 4. 3D CAROUSEL ARCHIVES (UPDATED) ==================== */
-        
+
         .carousel-scene {
             width: 100%;
             height: 480px; 
@@ -424,7 +424,7 @@
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
             transition: all 0.4s var(--ease-out-expo); 
         }
-        
+
         /* HOVER EFFECTS: Frame Glow & Lift */
         .carousel-item:hover .tech-card {
             border-color: var(--ice-cyan);
@@ -459,7 +459,7 @@
             border-bottom: 2px solid var(--ice-cyan); 
             pointer-events: none; 
         }
-        
+
         .card-visual img { 
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%; 
@@ -482,13 +482,13 @@
         .carousel-item.active .img-static { filter: grayscale(0); } /* Make active static img colored too if not hovering */
 
         /* --- END IMAGE SWAP --- */
-        
+
         .card-body { padding: 15px; pointer-events: none; }
         .card-meta { display: flex; gap: 10px; margin-bottom: 10px; }
         .tag { font-size: 0.7rem; font-family: 'Rajdhani', sans-serif; background: rgba(255,255,255,0.1); padding: 2px 6px; color: var(--text-sub); }
         .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
         .access-btn { background: transparent; border: none; color: var(--ice-cyan); font-family: 'Rajdhani', sans-serif; cursor: pointer; pointer-events: none; }
-        
+
         /* Control Bar (Slider) */
         .carousel-controls {
             position: absolute;
@@ -500,7 +500,7 @@
             justify-content: center;
             z-index: 10;
         }
-        
+
         .slider-track {
             width: 100%;
             height: 2px;
@@ -653,7 +653,7 @@
         .sound-toggle:hover, .sound-toggle.active { color: var(--ice-cyan); border-color: var(--ice-cyan); box-shadow: 0 0 5px var(--ice-cyan); }
 
         /* === EMBEDDED GAME STYLE (SMALLER + POPUP) === */
-        
+
         /* 游戏容器缩小版 */
         .game-container-full {
             width: 100%;
@@ -679,7 +679,7 @@
             height: 100%;
             cursor: crosshair;
         }
-        
+
         .game-ui-layer {
             position: absolute; top: 15px; left: 20px; right: 20px; 
             display: flex; justify-content: space-between; align-items: center;
@@ -713,7 +713,7 @@
             transition: opacity 0.3s;
         }
         .game-cover.hidden { opacity: 0; pointer-events: none; }
-        
+
         .start-game-btn {
             padding: 15px 40px;
             background: transparent;
@@ -735,7 +735,7 @@
             opacity: 0; pointer-events: none; transition: 0.3s;
         }
         .game-reward-modal.active { opacity: 1; pointer-events: all; }
-        
+
         .reward-card {
             width: 300px; padding: 25px; border: 1px solid #444; background: #111;
             text-align: center; position: relative;
@@ -754,7 +754,7 @@
         .reward-card.popup-gold .reward-title { color: var(--neon-gold); text-shadow: 0 0 10px var(--neon-gold); }
         .reward-card.popup-gold .visual-box { border: 1px solid var(--neon-gold); background: rgba(255,215,0,0.1); }
         .reward-card.popup-gold .visual-box::after { content: 'CORE DATA'; color: var(--neon-gold); font-weight: bold; }
-        
+
         .visual-box {
             width: 100px; height: 100px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center;
             font-family: 'Rajdhani'; letter-spacing: 2px;
@@ -798,7 +798,7 @@
                 <div class="scan-line-vertical"></div>
                 <div class="scan-line-horizontal"></div>
             </div>
-            
+
             <div class="loading-text-group">
                 <div class="decode-text" id="decode-text">INITIATING...</div>
                 <div class="loading-bar-fancy">
@@ -809,7 +809,7 @@
                     <span id="load-percent">00%</span>
                 </div>
             </div>
-            
+
             <button id="enter-btn">ACCESS GRANTED</button>
         </div>
         <div class="vignette-overlay"></div>
@@ -836,7 +836,7 @@
                     <div class="modal-decor">DATA_PACKET_ID: <span id="modal-id">...</span></div>
                     <h3 id="modal-full-title" style="font-family:'Rajdhani'; color:#fff; font-size:1.8rem; margin-bottom:10px;">TITLE</h3>
                     <p id="modal-full-desc" class="modal-desc">Description loading...</p>
-                    
+
                     <div class="modal-action">
                         <a id="modal-link" href="#" target="_blank" class="jump-btn">
                             INITIATE LINK <span class="arrow">>></span>
@@ -872,13 +872,13 @@
         <section id="overview" class="screen-section">
             <div class="hero-layout">
                 <div class="hero-left">
-                    <div class="decoration-tag">/// VOXEL ARCHITECT</div>
-                    <h1 class="glitch-header" data-text="SYSTEM BUILDER">SYSTEM BUILDER</h1>
-                    <h2 class="sub-header">ZLY // 逻辑编织者</h2>
+                    <div class="decoration-tag">/// </div>
+                    <h1 class="glitch-header" data-text="GAME DESIGNER">GAME DESIGNER</h1>
+                    <h2 class="sub-header">LEYI ZHANG // 游戏设计师</h2>
                     <p class="hero-desc">
                         "世界由方块与逻辑堆砌而成。"<br>
-                        点击右侧核心，切换逻辑矩阵视图。<br>
-                        在离散的像素中寻找连续的真理。
+                        点击右侧核心，切换视图。<br>
+                        每次点击的结果都是不同的。
                     </p>
                     <div class="stats-row">
                         <div class="stat-block">
@@ -891,13 +891,13 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="hero-right">
                     <div class="voxel-container js-tilt-3d clickable">
                         <div class="voxel-stage" id="voxel-stage"></div>
                         <div class="orbit-ring ring-outer"></div>
                         <div class="orbit-ring ring-inner"></div>
-                        
+
                         <div class="click-hint">>> CLICK CORE TO SWITCH PATTERN <<</div>
                     </div>
                 </div>
@@ -914,13 +914,13 @@
 
             <div class="carousel-scene" id="carousel-scene">
                 <div class="carousel-track" id="carousel-track">
-                    
+
                     <div class="carousel-item" 
                         data-title="蹦！蹦！音乐世界" 
                         data-desc="这是一个3D音乐沙盒游戏。尝试操控你的角色在钢琴键盘上创造出独属于自己的乐曲吧！触碰元素球有概率触发和旋哦！快来享受这个走路自带bgm的世界吧！" 
                         data-img="img/p2.png"
                         data-link="https://www.bilibili.com/"
-                        data-id="#0921">
+                        data-id="#0001">
                         <article class="tech-card">
                             <div class="card-visual">
                                 <img class="img-static" src="img/p3.jpg" alt="Static View">
@@ -935,57 +935,46 @@
                     </div>
 
                     <div class="carousel-item" 
-                        data-title="Economy Sim" 
-                        data-desc="基于Excel VBA与Python构建的MMORPG经济系统模拟器。可以模拟长达10年的服务器资源通胀情况，用于平衡金币产出与消耗循环。包含详细的可视化图表。" 
+                        data-title="欢迎进入直播间" 
+                        data-desc="一款基于打字对话的3D解谜探险游戏。游戏内模拟了在直播间与主播还有弹幕互动的场景，让玩家有代入感。" 
                         data-img="https://via.placeholder.com/600x400/222/2AF5FF?text=ECONOMY" 
-                        data-link="https://github.com/"
-                        data-id="#0815">
+                        data-img="img/2-3.png" 
+                        data-link="https://www.bilibili.com/"
+                        data-id="#0002">
                         <article class="tech-card">
                             <div class="card-visual">
                                 <img class="img-static" src="https://via.placeholder.com/600x300/222/2AF5FF?text=DATA+GRID" alt="Static">
                                 <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=SIMULATION+ACTIVE" alt="Hover">
+                                <img class="img-static" src="img/2-1.png" alt="Static">
+                                <img class="img-hover" src="img/2-2.png" alt="Hover">
                             </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">EXCEL</span><span class="tag">SIM</span></div>
                                 <h3>Economy Sim</h3>
+                                <h3>欢迎进入直播间</h3>
                                 <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0815</span></div>
                             </div>
                         </article>
-                    </div>
+                       </div>
 
                     <div class="carousel-item" 
-                        data-title="Gravity String Dancer" 
-                        data-desc="3D高机动性动作游戏。核心机制是基于物理摆动的'钩索'系统。玩家需要利用离心力和重力在巨大的赛博都市废墟中穿梭战斗。曾参与miHoYo游戏设计竞赛。" 
-                        data-img="https://via.placeholder.com/600x400/333/2AF5FF?text=GRAVITY+DANCER" 
-                        data-link="#"
-                        data-id="#1110">
-                        <article class="tech-card">
-                            <div class="card-visual">
-                                <img class="img-static" src="https://via.placeholder.com/600x300/333/2AF5FF?text=CITY+VIEW" alt="Static">
-                                <img class="img-hover" src="https://via.placeholder.com/600x300/222/2AF5FF?text=ACTION+SHOT" alt="Hover">
-                            </div>
-                            <div class="card-body">
-                                <div class="card-meta"><span class="tag">UNITY</span><span class="tag">ACTION</span></div>
-                                <h3>Gravity Dancer</h3>
-                                <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#1110</span></div>
-                            </div>
-                        </article>
-                    </div>
-
-                    <div class="carousel-item" 
-                        data-title="Neural Visualizer" 
-                        data-desc="一个基于WebGL的数据可视化实验，旨在将神经网络的黑盒过程具象化。用户可以实时输入参数，观察节点激活的粒子特效。灵感来源于《尼尔：机械纪元》的UI设计。" 
+                        data-title="Slime" 
+                        data-desc="类空洞骑士的一款像素探险游戏。" 
                         data-img="https://via.placeholder.com/600x400/000/2AF5FF?text=NEURAL" 
-                        data-link="https://threejs.org/"
-                        data-id="#0773">
+                        data-img="img/3-3.png" 
+                        data-link="https://www.bilibili.com/"
+                        data-id="#0003">
                         <article class="tech-card">
                             <div class="card-visual">
                                 <img class="img-static" src="https://via.placeholder.com/600x300/000/2AF5FF?text=NODES" alt="Static">
                                 <img class="img-hover" src="https://via.placeholder.com/600x300/111/2AF5FF?text=ACTIVATION" alt="Hover">
+                                <img class="img-static" src="img/3-1.png" alt="Static">
+                                <img class="img-hover" src="img/3-2.png" alt="Hover">
                             </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">WEBGL</span><span class="tag">ART</span></div>
                                 <h3>Neural Visualizer</h3>
+                                <h3>Slime</h3>
                                 <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0773</span></div>
                             </div>
                         </article>
@@ -995,16 +984,22 @@
                         data-title="Cyber Pet: E01" 
                         data-desc="电子宠物养成APP。结合了手机计步器与天气API，你的现实生活状态直接影响电子宠物的进化路线。包含30种不同的进化形态与独特的像素动画。" 
                         data-img="https://via.placeholder.com/600x400/1a1a1a/2AF5FF?text=CYBER+PET" 
-                        data-link="https://play.google.com/"
-                        data-id="#0666">
+                        data-title="WE-OFF APP" 
+                        data-desc="一款反乌托邦世界观下的叙事性思辨APP。" 
+                        data-img="img/4-3.png" 
+                        data-link="https://www.bilibili.com/"
+                        data-id="#0004">
                         <article class="tech-card">
                             <div class="card-visual">
                                 <img class="img-static" src="https://via.placeholder.com/600x300/1a1a1a/2AF5FF?text=EGG+STATE" alt="Static">
                                 <img class="img-hover" src="https://via.placeholder.com/600x300/000/2AF5FF?text=EVOLVED" alt="Hover">
+                                <img class="img-static" src="img/4-1.png" alt="Static">
+                                <img class="img-hover" src="img/4-2.png" alt="Hover">
                             </div>
                             <div class="card-body">
                                 <div class="card-meta"><span class="tag">APP</span><span class="tag">LIVE2D</span></div>
                                 <h3>Cyber Pet: E01</h3>
+                                <h3>WE-OFF APP</h3>
                                 <div class="card-footer"><button class="access-btn">ACCESS >></button><span class="id-code">#0666</span></div>
                             </div>
                         </article>
@@ -1017,7 +1012,7 @@
                         <div class="slider-thumb" id="slider-thumb"></div>
                     </div>
                 </div>
-                
+
                 <div class="drag-hint">
                     << DRAG OR SLIDE TO ROTATE >>
                 </div>
@@ -1048,7 +1043,7 @@
                 <div class="intel-row" 
                     data-title="战斗公式推演验证" 
                     data-desc="Excel表格文件。包含了减伤公式、暴击收益曲线以及属性克制系数的完整推演过程。用于验证游戏后期的数值膨胀控制模型。" 
-                    data-link="https://office.com/" 
+                    data-link="https://docs.google.com/" 
                     data-id="XLS_14MB">
                     <div class="intel-icon">XLS</div>
                     <div class="intel-info">
@@ -1067,7 +1062,7 @@
                 <div class="deco-line"></div>
                 <span class="idx">04</span>
             </div>
-            
+
             <div class="game-container-full">
                 <div class="game-ui-layer">
                     <span id="game-score">DATA: 0</span>
@@ -1075,7 +1070,7 @@
                     <span id="game-status">IDLE</span>
                 </div>
                 <canvas id="miner-canvas"></canvas>
-                
+
                 <div class="game-cover" id="game-cover">
                     <button class="start-game-btn" onclick="toggleGame()">
                         [ INITIATE DATA MINING ]
@@ -1107,7 +1102,7 @@
                     <div class="channel-list">
                         <a href="#" class="channel-item">
                             <span class="icon">✉</span>
-                            <span class="text">EMAIL: your@email.com</span>
+                            <span class="text">EMAIL: 2714054108@qq.com</span>
                             <span class="arrow">>></span>
                         </a>
                         <a href="#" class="channel-item">
@@ -1148,28 +1143,29 @@
         // =========================================================
         // --- 0. AUDIO SYSTEM (全局音频系统 - 纯代码生成 + BGM) ---
         // =========================================================
-        
+
         // [配置区域] 请在这里配置你的背景音乐路径
         const BGM_PATH = 'sound/1.mp3'; 
+        const BGM_PATH = 'sound/1.wav'; 
 
         // 初始化 BGM 对象
         const bgmAudio = new Audio(BGM_PATH);
         bgmAudio.loop = true;   // 设置循环播放
-        bgmAudio.volume = 0.1;  // 设置背景音乐音量 (0.0 - 1.0)
+        bgmAudio.volume = 0.4;  // 设置背景音乐音量 (0.0 - 1.0)
 
         // Web Audio API 上下文 (用于生成系统音效)
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
-        
+
         let isMuted = true; // 默认静音，直到进入系统
         const soundToggleBtn = document.getElementById('sound-toggle');
 
         // 开关声音逻辑
         const toggleSound = () => {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            
+
             isMuted = !isMuted;
-            
+
             if (isMuted) {
                 // 静音状态
                 bgmAudio.pause();
@@ -1195,7 +1191,7 @@
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
+
             osc.connect(gain);
             gain.connect(audioCtx.destination);
 
@@ -1204,10 +1200,10 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, t);
                 osc.frequency.exponentialRampToValueAtTime(1200, t + 0.03);
-                
+
                 gain.gain.setValueAtTime(0.05, t); // 音量很小
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
-                
+
                 osc.start(t);
                 osc.stop(t + 0.03);
 
@@ -1229,10 +1225,10 @@
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(880, t);
                 osc.frequency.exponentialRampToValueAtTime(110, t + 0.2);
-                
+
                 gain.gain.setValueAtTime(0.08, t);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-                
+
                 osc.start(t);
                 osc.stop(t + 0.2);
 
@@ -1241,10 +1237,10 @@
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1200, t);
                 osc.frequency.setValueAtTime(1800, t + 0.05);
-                
+
                 gain.gain.setValueAtTime(0.05, t);
                 gain.gain.linearRampToValueAtTime(0, t + 0.1);
-                
+
                 osc.start(t);
                 osc.stop(t + 0.1);
 
@@ -1255,11 +1251,11 @@
                 osc.frequency.linearRampToValueAtTime(880, t + 0.1); // 上滑
                 osc.frequency.setValueAtTime(880, t + 0.1);
                 osc.frequency.linearRampToValueAtTime(1320, t + 0.2); // 再上滑
-                
+
                 gain.gain.setValueAtTime(0.1, t);
                 gain.gain.linearRampToValueAtTime(0.2, t + 0.2);
                 gain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-                
+
                 osc.start(t);
                 osc.stop(t + 0.8);
             }
@@ -1274,7 +1270,7 @@
 
         // 绑定悬停音效 (Hover)
         bindSound('.nav-btn, .carousel-item, .intel-row, .jump-btn, .download-btn, .channel-item, .modal-close, .start-game-btn', 'mouseenter', 'hover');
-        
+
         // 绑定点击音效 (Click)
         bindSound('.nav-btn, .jump-btn, .download-btn, .channel-item, .modal-close, .carousel-item, .start-game-btn', 'click', 'click');
 
@@ -1286,21 +1282,21 @@
         const loadingBar = document.querySelector('.bar-fill');
         const loadPercent = document.getElementById('load-percent');
         const decodeText = document.getElementById('decode-text');
-        
+
         // 进入站点核心函数
         const enterSite = () => {
             // 1. 尝试激活音频上下文
             if(audioCtx.state === 'suspended') {
                 audioCtx.resume().catch(e => console.log("Audio Context Autoplay restricted"));
             }
-            
+
             // 2. 解除静音标志
             isMuted = false;
-            
+
             // 3. 更新右下角UI状态
             soundToggleBtn.classList.add('active');
             soundToggleBtn.innerHTML = '<span class="icon">🔊</span> AUDIO: ON';
-            
+
             // 4. *** 播放背景音乐 ***
             // 注意：如果浏览器策略极其严格，可能第一次需要用户点击页面任意位置才能真正出声
             bgmAudio.play().catch(error => {
@@ -1324,10 +1320,10 @@
             if (progress > 100) progress = 100;
             loadingBar.style.width = `${progress}%`;
             loadPercent.innerText = `${Math.floor(progress)}%`;
-            
+
             if (progress >= 100) {
                 clearInterval(loadInterval);
-                
+
                 // 加载完成动画序列
                 loadingBar.style.width = '100%';
                 loadingScreen.classList.add('success-state'); 
@@ -1338,10 +1334,10 @@
                     decodeText.innerText = "ACCESS GRANTED";
                     decodeText.classList.add('glitch-text-active');
                     decodeText.style.opacity = 1; 
-                    
+
                     // 在这里播放一个微小的音效提示加载完成
                     playSound('click');
-                    
+
                     setTimeout(() => {
                         // 界面淡出
                         loadingScreen.classList.add('granted-anim'); 
@@ -1391,7 +1387,7 @@
                 if (colorMod === 'dark' && type !== 'type-core') extraClass = 'type-dark';
                 if (colorMod === 'bright') extraClass = 'cube-pulse'; 
                 if (Math.random() > 0.8 && type !== 'type-core') extraClass = 'cube-pulse';
-                
+
                 cube.className = `cube ${type} ${extraClass}`;
                 cube.style.setProperty('--tx', `${x * size}px`);
                 cube.style.setProperty('--ty', `${y * size}px`);
@@ -1470,13 +1466,13 @@
         const carouselItems = document.querySelectorAll('.carousel-item');
         const carouselScene = document.getElementById('carousel-scene');
         const sliderThumb = document.getElementById('slider-thumb');
-        
+
         let currentRotation = 0;
         let targetRotation = 0;
         let isDragging = false;
         let startX = 0;
         let lastX = 0;
-        
+
         const radius = window.innerWidth < 768 ? 180 : 320; 
         const totalItems = carouselItems.length;
         const anglePerItem = 360 / totalItems;
@@ -1577,7 +1573,7 @@
         const rewardCard = document.getElementById('reward-card');
         const rewardTitle = document.getElementById('reward-title');
         const rewardDesc = document.getElementById('reward-desc');
-        
+
         let gameLoopId;
         let gameActive = false;
         let gamePaused = false; 
@@ -1689,7 +1685,7 @@
                     else pullSpeed = 5; 
                 }
                 hook.length -= pullSpeed;
-                
+
                 if(hook.length <= 50) {
                     hook.length = 50;
                     if(hook.targetObj) {
@@ -1705,7 +1701,7 @@
             gamePaused = true; 
             rewardModal.classList.add('active');
             rewardCard.classList.remove('popup-green', 'popup-gold');
-            
+
             if (obj.type === 0) {
                 rewardCard.classList.add('popup-green');
                 rewardTitle.innerText = "DATA FRAGMENT";
@@ -1742,10 +1738,10 @@
             gCtx.clearRect(0, 0, canvasW, canvasH);
             minerals.forEach(m => {
                 if(m.caught && hook.targetObj !== m) return; 
-                
+
                 let renderX = m.x;
                 let renderY = m.y;
-                
+
                 if(hook.targetObj === m) {
                     const rad = hook.angle * Math.PI / 180;
                     renderX = hook.x + Math.sin(rad) * hook.length;
@@ -1811,7 +1807,7 @@
             gCtx.closePath();
             gCtx.fill();
             gCtx.restore();
-            
+
             gCtx.fillStyle = "#222";
             gCtx.fillRect(hook.x - 10, 0, 20, 20);
         };
@@ -1843,7 +1839,7 @@
         });
 
         const resize = () => { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; };
-        
+
         class Particle {
             constructor() { this.reset(true); }
             reset(isInit = false) {
